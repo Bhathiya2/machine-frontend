@@ -1,0 +1,11 @@
+--- src/app/App.tsx
++++ src/app/App.tsx
+@@ -1946,8 +1946,14 @@
+   users: AppUser[]; currentUser: AppUser;
+ }) {
+   const [selectedWOId, setSelectedWOId] = useState<string | null>(workOrders[0]?.id ?? null);
++  const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()));
++  const [selectedMonth, setSelectedMonth] = useState(() => String(new Date().getMonth() + 1).padStart(2, "0"));
++
+   const [showEntryModal, setShowEntryModal] = useState(false);
+   const [editingEntry, setEditingEntry] = useState<CostEntry | null>(null);

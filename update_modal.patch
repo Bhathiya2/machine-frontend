@@ -1,0 +1,82 @@
+--- src/app/App.tsx
++++ src/app/App.tsx
+@@ -1946,8 +1946,14 @@
+   const [selectedWOId, setSelectedWOId] = useState<string | null>(workOrders[0]?.id ?? null);
+   const [showEntryModal, setShowEntryModal] = useState(false);
+   const [editingEntry, setEditingEntry] = useState<CostEntry | null>(null);
+-  const [entryForm, setEntryForm] = useState<{ category: CostCategory; description: string; amount: string; date: string }>({
+-    category: "Equipment", description: "", amount: "", date: "2024-07-06",
++  const [editForm, setEditForm] = useState<{ category: CostCategory; description: string; amount: string; date: string }>({
++    category: "Equipment", description: "", amount: "", date: "",
++  });
++  const [addDate, setAddDate] = useState(() => new Date().toISOString().split("T")[0]);
++  const [addEntries, setAddEntries] = useState<Record<CostCategory, { amount: string; description: string }>>({
++    Equipment: { amount: "", description: "" },
++    Transportation: { amount: "", description: "" },
++    Accommodation: { amount: "", description: "" },
++    Others: { amount: "", description: "" },
+   });
+   const [woSearch, setWoSearch] = useState("");
+ 
+@@ -1997,35 +2003,50 @@
+ 
+   const openAdd = () => {
+     setEditingEntry(null);
+-    setEntryForm({ category: "Equipment", description: "", amount: "", date: "2024-07-06" });
++    setAddDate(new Date().toISOString().split("T")[0]);
++    setAddEntries({
++      Equipment: { amount: "", description: "" },
++      Transportation: { amount: "", description: "" },
++      Accommodation: { amount: "", description: "" },
++      Others: { amount: "", description: "" },
++    });
+     setShowEntryModal(true);
+   };
+ 
+   const openEdit = (entry: CostEntry) => {
+     setEditingEntry(entry);
+-    setEntryForm({ category: entry.category, description: entry.description, amount: String(entry.amount), date: entry.date });
++    setEditForm({ category: entry.category, description: entry.description, amount: String(entry.amount), date: entry.date });
+     setShowEntryModal(true);
+   };
+ 
+   const saveEntry = () => {
+-    if (!selectedWO || !entryForm.description || !entryForm.amount) return;
+-    const amt = parseFloat(entryForm.amount);
+-    if (isNaN(amt) || amt <= 0) return;
++    if (!selectedWO) return;
+ 
+     if (editingEntry) {
++      if (!editForm.description || !editForm.amount) return;
++      const amt = parseFloat(editForm.amount);
++      if (isNaN(amt) || amt <= 0) return;
+       setWorkOrders(workOrders.map((w) => w.id === selectedWO.id
+         ? { ...w, costEntries: w.costEntries.map((e) => e.id === editingEntry.id
+-            ? { ...e, category: entryForm.category, description: entryForm.description, amount: amt, date: entryForm.date }
++            ? { ...e, category: editForm.category, description: editForm.description, amount: amt, date: editForm.date }
+             : e) }
+         : w));
+     } else {
+-      const newEntry: CostEntry = {
+-        id: `ce-${Date.now()}`, category: entryForm.category,
+-        description: entryForm.description, amount: amt, date: entryForm.date,
+-      };
++      const newCostEntries: CostEntry[] = [];
++      let timeOffset = 0;
++      COST_CATEGORIES.forEach((cat) => {
++        const { amount, description } = addEntries[cat];
++        const amt = parseFloat(amount);
++        if (!isNaN(amt) && amt > 0 && description.trim()) {
++          newCostEntries.push({
++            id: `ce-${Date.now()}-${timeOffset++}`, category: cat,
++            description: description.trim(), amount: amt, date: addDate,
++          });
++        }
++      });
++      if (newCostEntries.length === 0) return;
+       setWorkOrders(workOrders.map((w) => w.id === selectedWO.id
+-        ? { ...w, costEntries: [...w.costEntries, newEntry] }
++        ? { ...w, costEntries: [...w.costEntries, ...newCostEntries] }
+         : w));
+     }
+     setShowEntryModal(false);

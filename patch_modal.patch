@@ -1,0 +1,24 @@
+--- src/app/App.tsx
++++ src/app/App.tsx
+@@ -2392,6 +2392,20 @@
+                       })}
+                     </div>
+                   </FormField>
++                  {["Transportation", "Spare Part", "Others"].includes(editForm.category) && (
++                    <FormField label={
++                      editForm.category === "Transportation" ? "Route / Destination" :
++                      editForm.category === "Spare Part" ? "Part Name & Number" :
++                      "Description"
++                    }>
++                      <input className={inputCls} 
++                        placeholder={
++                          editForm.category === "Transportation" ? "e.g. Plant A to Plant B" :
++                          editForm.category === "Spare Part" ? "e.g. Servo Motor A06B" :
++                          "e.g. Advance payment"
++                        }
++                        value={editForm.details} onChange={(e) => setEditForm({ ...editForm, details: e.target.value })} />
++                    </FormField>
++                  )}
+                   <div className="grid grid-cols-2 gap-3">
+                     <FormField label="Quantity">
+                       <input type="number" min="0" step="0.1" className={inputCls + " font-mono"}
