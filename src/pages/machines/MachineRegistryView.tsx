@@ -14,6 +14,7 @@ import {
   Trash2,
   Wrench,
   X,
+  Printer,
 } from 'lucide-react'
 import { useDisclosure, useDebounce } from '@/hooks/base/commonHooks'
 import { usePermissions } from '@/hooks/permission/usePermissions'
@@ -33,6 +34,7 @@ import { Badge, Card, FormField, inputCls, selectCls } from '@/pages/dashboard/c
 import { formatDate, fmtCurrency, warrantyStatus } from '@/pages/dashboard/utils/formatters'
 import { machineStatusIcon, severityColor, statusColor, woStatusColor, woStatusIcon } from '@/pages/dashboard/utils/statusHelpers'
 import { type MachineFormData } from './machineMapper'
+import { MachineCertificatePrint } from './MachineCertificatePrint'
 import type { FaultFormData } from '@/pages/fault-reports/faultMapper'
 import type {
   AppUser,
@@ -165,6 +167,33 @@ export function MachineRegistryView({
       installDate: machine.installDate,
       installedBy: machine.installedBy,
       status: machine.status,
+      cert_reference: machine.cert_reference,
+      cert_calibration: machine.cert_calibration,
+      cert_warranty: machine.cert_warranty,
+      cert_contract: machine.cert_contract,
+      client_name: machine.client_name,
+      client_contact_person: machine.client_contact_person,
+      client_phone_number: machine.client_phone_number,
+      client_system: machine.client_system,
+      client_customer_code: machine.client_customer_code,
+      client_job_title: machine.client_job_title,
+      client_email: machine.client_email,
+      client_expired_date: machine.client_expired_date,
+      client_date_of_manufacture: machine.client_date_of_manufacture,
+      tech_freq: machine.tech_freq,
+      tech_voltage: machine.tech_voltage,
+      tech_amp: machine.tech_amp,
+      tech_total_mc_power: machine.tech_total_mc_power,
+      tech_ups: machine.tech_ups,
+      tech_chiller_cooling_system: machine.tech_chiller_cooling_system,
+      tech_chiller_absorbed_power: machine.tech_chiller_absorbed_power,
+      tech_smoke_extractor: machine.tech_smoke_extractor,
+      tech_room_temp: machine.tech_room_temp,
+      sign_completed: machine.sign_completed,
+      sign_incompleted: machine.sign_incompleted,
+      sign_signed_by: machine.sign_signed_by,
+      sign_technician_signature: machine.sign_technician_signature,
+      sign_date: machine.sign_date,
     })
     formModal.open()
   }
@@ -520,6 +549,77 @@ export function MachineRegistryView({
                   onChange={(event) => setForm({ ...form, installedBy: event.target.value })}
                 />
               </FormField>
+
+              <details className="group rounded-lg border border-border bg-muted/20 p-4 open:bg-card">
+                <summary className="cursor-pointer font-semibold text-foreground outline-none marker:text-muted-foreground group-open:mb-4">
+                  Installation Certificate Details (Optional)
+                </summary>
+                <div className="space-y-6">
+                  {/* Header Info */}
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Certificate Header</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField label="Reference"><input className={inputCls} value={form.cert_reference || ''} onChange={(e) => setForm({ ...form, cert_reference: e.target.value })} /></FormField>
+                      <FormField label="Calibration"><input className={inputCls} value={form.cert_calibration || ''} onChange={(e) => setForm({ ...form, cert_calibration: e.target.value })} /></FormField>
+                      <FormField label="Warranty"><input className={inputCls} value={form.cert_warranty || ''} onChange={(e) => setForm({ ...form, cert_warranty: e.target.value })} /></FormField>
+                      <FormField label="Contract"><input className={inputCls} value={form.cert_contract || ''} onChange={(e) => setForm({ ...form, cert_contract: e.target.value })} /></FormField>
+                    </div>
+                  </div>
+
+                  {/* Client Details */}
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Client Details</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField label="Name"><input className={inputCls} value={form.client_name || ''} onChange={(e) => setForm({ ...form, client_name: e.target.value })} /></FormField>
+                      <FormField label="Contact Person"><input className={inputCls} value={form.client_contact_person || ''} onChange={(e) => setForm({ ...form, client_contact_person: e.target.value })} /></FormField>
+                      <FormField label="Phone Number"><input className={inputCls} value={form.client_phone_number || ''} onChange={(e) => setForm({ ...form, client_phone_number: e.target.value })} /></FormField>
+                      <FormField label="System"><input className={inputCls} value={form.client_system || ''} onChange={(e) => setForm({ ...form, client_system: e.target.value })} /></FormField>
+                      <FormField label="Customer Code"><input className={inputCls} value={form.client_customer_code || ''} onChange={(e) => setForm({ ...form, client_customer_code: e.target.value })} /></FormField>
+                      <FormField label="Job Title"><input className={inputCls} value={form.client_job_title || ''} onChange={(e) => setForm({ ...form, client_job_title: e.target.value })} /></FormField>
+                      <FormField label="Email"><input className={inputCls} value={form.client_email || ''} onChange={(e) => setForm({ ...form, client_email: e.target.value })} /></FormField>
+                      <FormField label="Expired Date"><input className={inputCls} value={form.client_expired_date || ''} onChange={(e) => setForm({ ...form, client_expired_date: e.target.value })} /></FormField>
+                      <FormField label="Date of Manufacture"><input className={inputCls} value={form.client_date_of_manufacture || ''} onChange={(e) => setForm({ ...form, client_date_of_manufacture: e.target.value })} /></FormField>
+                    </div>
+                  </div>
+
+                  {/* Technical Information */}
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Technical Information</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField label="Freq"><input className={inputCls} value={form.tech_freq || ''} onChange={(e) => setForm({ ...form, tech_freq: e.target.value })} /></FormField>
+                      <FormField label="Voltage"><input className={inputCls} value={form.tech_voltage || ''} onChange={(e) => setForm({ ...form, tech_voltage: e.target.value })} /></FormField>
+                      <FormField label="Amp"><input className={inputCls} value={form.tech_amp || ''} onChange={(e) => setForm({ ...form, tech_amp: e.target.value })} /></FormField>
+                      <FormField label="Total MC Power"><input className={inputCls} value={form.tech_total_mc_power || ''} onChange={(e) => setForm({ ...form, tech_total_mc_power: e.target.value })} /></FormField>
+                      <FormField label="UPS"><input className={inputCls} value={form.tech_ups || ''} onChange={(e) => setForm({ ...form, tech_ups: e.target.value })} /></FormField>
+                      <FormField label="Chiller Cooling System"><input className={inputCls} value={form.tech_chiller_cooling_system || ''} onChange={(e) => setForm({ ...form, tech_chiller_cooling_system: e.target.value })} /></FormField>
+                      <FormField label="Chiller Absorbed Power"><input className={inputCls} value={form.tech_chiller_absorbed_power || ''} onChange={(e) => setForm({ ...form, tech_chiller_absorbed_power: e.target.value })} /></FormField>
+                      <FormField label="Smoke Extractor"><input className={inputCls} value={form.tech_smoke_extractor || ''} onChange={(e) => setForm({ ...form, tech_smoke_extractor: e.target.value })} /></FormField>
+                      <FormField label="Room Temp"><input className={inputCls} value={form.tech_room_temp || ''} onChange={(e) => setForm({ ...form, tech_room_temp: e.target.value })} /></FormField>
+                    </div>
+                  </div>
+
+                  {/* Signatures */}
+                  <div>
+                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Signatures</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField label="Signed By (Name)"><input className={inputCls} value={form.sign_signed_by || ''} onChange={(e) => setForm({ ...form, sign_signed_by: e.target.value })} /></FormField>
+                      <FormField label="Technician Signature (Name/Initials)"><input className={inputCls} value={form.sign_technician_signature || ''} onChange={(e) => setForm({ ...form, sign_technician_signature: e.target.value })} /></FormField>
+                      <FormField label="Signature Date"><input type="date" className={inputCls} value={form.sign_date || ''} onChange={(e) => setForm({ ...form, sign_date: e.target.value })} /></FormField>
+                      
+                      <div className="flex flex-col justify-center space-y-2 pt-6">
+                        <label className="flex items-center gap-2 text-sm font-medium">
+                          <input type="checkbox" className="size-4" checked={form.sign_completed || false} onChange={(e) => setForm({ ...form, sign_completed: e.target.checked })} />
+                          Completed
+                        </label>
+                        <label className="flex items-center gap-2 text-sm font-medium">
+                          <input type="checkbox" className="size-4" checked={form.sign_incompleted || false} onChange={(e) => setForm({ ...form, sign_incompleted: e.target.checked })} />
+                          Incompleted
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
             <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
               <Button variant="outline" onClick={formModal.close}>
@@ -635,9 +735,13 @@ export function MachineRegistryView({
               )}
 
               <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => window.print()}>
+                  <Printer size={14} className="mr-2" />
+                  Print Certificate
+                </Button>
                 {canManage && (
                   <Button variant="outline" onClick={() => { viewModal.close(); openEdit(activeView) }}>
-                    <Pencil size={14} />
+                    <Pencil size={14} className="mr-2" />
                     Edit
                   </Button>
                 )}
@@ -743,6 +847,8 @@ export function MachineRegistryView({
           </div>
         </div>
       )}
+
+      {activeView && <MachineCertificatePrint machine={activeView} />}
     </div>
   )
 }
