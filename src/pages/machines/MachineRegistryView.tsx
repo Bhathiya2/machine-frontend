@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
+  Building,
   Eye,
+  FileCheck,
+  FileText,
   Flag,
   Loader2,
   MapPin,
@@ -11,7 +14,9 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Sliders,
   Trash2,
+  User,
   Wrench,
   X,
   Printer,
@@ -100,6 +105,7 @@ export function MachineRegistryView({
   const deleteModal = useDisclosure(false)
 
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create')
+  const [activeFormTab, setActiveFormTab] = useState<'general' | 'certificate' | 'technical'>('general')
   const [form, setForm] = useState<MachineFormData>(() => EMPTY_FORM(currentUser.name))
   const [viewMachine, setViewMachine] = useState<Machine | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Machine | null>(null)
@@ -151,12 +157,14 @@ export function MachineRegistryView({
 
   const openCreate = () => {
     setFormMode('create')
+    setActiveFormTab('general')
     setForm(EMPTY_FORM(currentUser.name))
     formModal.open()
   }
 
   const openEdit = (machine: Machine) => {
     setFormMode('edit')
+    setActiveFormTab('general')
     setForm({
       id: machine.id,
       name: machine.name,
@@ -458,177 +466,334 @@ export function MachineRegistryView({
       </Card>
 
       {formModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-border bg-card shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
-              <h2 className="font-semibold text-foreground">
-                {formMode === 'create' ? 'Add new machine' : 'Edit machine'}
-              </h2>
-              <button type="button" onClick={formModal.close} className="text-muted-foreground hover:text-foreground">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-border bg-muted/30 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <Wrench className="size-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {formMode === 'create' ? 'Add New Machine' : 'Edit Machine'}
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Fill in the machine specifications and installation certificate details.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={formModal.close}
+                className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
                 <X size={20} />
               </button>
             </div>
-            <div className="space-y-4 px-6 py-5">
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Machine ID">
-                  <input
-                    className={`${inputCls} font-mono uppercase`}
-                    placeholder="MCH-0XXX"
-                    value={form.id}
-                    disabled={formMode === 'edit'}
-                    onChange={(event) => setForm({ ...form, id: event.target.value })}
-                  />
-                </FormField>
-                <FormField label="Status">
-                  <select
-                    className={selectCls}
-                    value={form.status}
-                    onChange={(event) => setForm({ ...form, status: event.target.value as MachineStatus })}
-                  >
-                    {STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </FormField>
-              </div>
-              <FormField label="Machine name">
-                <input
-                  className={inputCls}
-                  value={form.name}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
-                />
-              </FormField>
-              <FormField label="Model">
-                <input
-                  className={inputCls}
-                  value={form.model}
-                  onChange={(event) => setForm({ ...form, model: event.target.value })}
-                />
-              </FormField>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Site">
-                  <select className={selectCls} value={form.site} onChange={(event) => setForm({ ...form, site: event.target.value })}>
-                    {SITES.map((site) => (
-                      <option key={site} value={site}>
-                        {site}
-                      </option>
-                    ))}
-                  </select>
-                </FormField>
-                <FormField label="Install date">
-                  <input
-                    type="date"
-                    className={inputCls}
-                    value={form.installDate}
-                    onChange={(event) => setForm({ ...form, installDate: event.target.value })}
-                  />
-                </FormField>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Factory group">
-                  <input
-                    className={inputCls}
-                    value={form.factoryGroup}
-                    onChange={(event) => setForm({ ...form, factoryGroup: event.target.value })}
-                  />
-                </FormField>
-                <FormField label="Factory">
-                  <input
-                    className={inputCls}
-                    value={form.factory}
-                    onChange={(event) => setForm({ ...form, factory: event.target.value })}
-                  />
-                </FormField>
-              </div>
-              <FormField label="Installed by">
-                <input
-                  className={inputCls}
-                  value={form.installedBy}
-                  onChange={(event) => setForm({ ...form, installedBy: event.target.value })}
-                />
-              </FormField>
 
-              <details className="group rounded-lg border border-border bg-muted/20 p-4 open:bg-card">
-                <summary className="cursor-pointer font-semibold text-foreground outline-none marker:text-muted-foreground group-open:mb-4">
-                  Installation Certificate Details (Optional)
-                </summary>
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-border bg-muted/20 px-6 pt-2 gap-2 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveFormTab('general')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all cursor-pointer ${
+                  activeFormTab === 'general'
+                    ? 'border-primary text-primary bg-card rounded-t-lg shadow-sm'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-t-lg'
+                }`}
+              >
+                <Building className="size-4" />
+                <span>1. General Details</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFormTab('certificate')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all cursor-pointer ${
+                  activeFormTab === 'certificate'
+                    ? 'border-primary text-primary bg-card rounded-t-lg shadow-sm'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-t-lg'
+                }`}
+              >
+                <FileText className="size-4" />
+                <span>2. Certificate & Client</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFormTab('technical')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-all cursor-pointer ${
+                  activeFormTab === 'technical'
+                    ? 'border-primary text-primary bg-card rounded-t-lg shadow-sm'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-t-lg'
+                }`}
+              >
+                <Sliders className="size-4" />
+                <span>3. Specs & Signatures</span>
+              </button>
+            </div>
+
+            {/* Tab Content Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              {activeFormTab === 'general' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="Machine ID">
+                      <input
+                        className={`${inputCls} font-mono uppercase font-semibold`}
+                        placeholder="MCH-0XXX"
+                        value={form.id}
+                        disabled={formMode === 'edit'}
+                        onChange={(event) => setForm({ ...form, id: event.target.value })}
+                      />
+                    </FormField>
+                    <FormField label="Status">
+                      <select
+                        className={selectCls}
+                        value={form.status}
+                        onChange={(event) => setForm({ ...form, status: event.target.value as MachineStatus })}
+                      >
+                        {STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </FormField>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="Machine Name">
+                      <input
+                        className={inputCls}
+                        placeholder="e.g. CNC Milling Unit #4"
+                        value={form.name}
+                        onChange={(event) => setForm({ ...form, name: event.target.value })}
+                      />
+                    </FormField>
+                    <FormField label="Model">
+                      <input
+                        className={inputCls}
+                        placeholder="e.g. Haas VF-2SS"
+                        value={form.model}
+                        onChange={(event) => setForm({ ...form, model: event.target.value })}
+                      />
+                    </FormField>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="Site">
+                      <select className={selectCls} value={form.site} onChange={(event) => setForm({ ...form, site: event.target.value })}>
+                        {SITES.map((site) => (
+                          <option key={site} value={site}>
+                            {site}
+                          </option>
+                        ))}
+                      </select>
+                    </FormField>
+                    <FormField label="Install Date">
+                      <input
+                        type="date"
+                        className={inputCls}
+                        value={form.installDate}
+                        onChange={(event) => setForm({ ...form, installDate: event.target.value })}
+                      />
+                    </FormField>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField label="Factory Group">
+                      <input
+                        className={inputCls}
+                        placeholder="e.g. North America Manufacturing"
+                        value={form.factoryGroup}
+                        onChange={(event) => setForm({ ...form, factoryGroup: event.target.value })}
+                      />
+                    </FormField>
+                    <FormField label="Factory">
+                      <input
+                        className={inputCls}
+                        placeholder="e.g. Detroit Assembly"
+                        value={form.factory}
+                        onChange={(event) => setForm({ ...form, factory: event.target.value })}
+                      />
+                    </FormField>
+                  </div>
+
+                  <FormField label="Installed By">
+                    <input
+                      className={inputCls}
+                      placeholder="Technician or Engineer Name"
+                      value={form.installedBy}
+                      onChange={(event) => setForm({ ...form, installedBy: event.target.value })}
+                    />
+                  </FormField>
+                </div>
+              )}
+
+              {activeFormTab === 'certificate' && (
                 <div className="space-y-6">
-                  {/* Header Info */}
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Certificate Header</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Reference"><input className={inputCls} value={form.cert_reference || ''} onChange={(e) => setForm({ ...form, cert_reference: e.target.value })} /></FormField>
-                      <FormField label="Calibration"><input className={inputCls} value={form.cert_calibration || ''} onChange={(e) => setForm({ ...form, cert_calibration: e.target.value })} /></FormField>
-                      <FormField label="Warranty"><input className={inputCls} value={form.cert_warranty || ''} onChange={(e) => setForm({ ...form, cert_warranty: e.target.value })} /></FormField>
-                      <FormField label="Contract"><input className={inputCls} value={form.cert_contract || ''} onChange={(e) => setForm({ ...form, cert_contract: e.target.value })} /></FormField>
+                  {/* Header Info Section */}
+                  <div className="rounded-lg border border-border bg-muted/10 p-4 space-y-3">
+                    <div className="flex items-center gap-2 border-b border-border pb-2">
+                      <FileText className="size-4 text-primary" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">Certificate Header Details</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField label="Reference Number">
+                        <input className={inputCls} placeholder="e.g. CERT-2026-001" value={form.cert_reference || ''} onChange={(e) => setForm({ ...form, cert_reference: e.target.value })} />
+                      </FormField>
+                      <FormField label="Calibration Info">
+                        <input className={inputCls} placeholder="e.g. ISO 9001 Standard" value={form.cert_calibration || ''} onChange={(e) => setForm({ ...form, cert_calibration: e.target.value })} />
+                      </FormField>
+                      <FormField label="Warranty Period">
+                        <select
+                          className={selectCls}
+                          value={form.cert_warranty || ''}
+                          onChange={(e) => setForm({ ...form, cert_warranty: e.target.value })}
+                        >
+                          <option value="" disabled>Select warranty period</option>
+                          {Array.from({ length: 10 }, (_, i) => `${i + 1} Year${i > 0 ? 's' : ''}`).map((period) => (
+                            <option key={period} value={period}>
+                              {period}
+                            </option>
+                          ))}
+                        </select>
+                      </FormField>
+                      <FormField label="Contract Reference">
+                        <input className={inputCls} placeholder="e.g. CNT-88421" value={form.cert_contract || ''} onChange={(e) => setForm({ ...form, cert_contract: e.target.value })} />
+                      </FormField>
                     </div>
                   </div>
 
-                  {/* Client Details */}
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Client Details</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Name"><input className={inputCls} value={form.client_name || ''} onChange={(e) => setForm({ ...form, client_name: e.target.value })} /></FormField>
-                      <FormField label="Contact Person"><input className={inputCls} value={form.client_contact_person || ''} onChange={(e) => setForm({ ...form, client_contact_person: e.target.value })} /></FormField>
-                      <FormField label="Phone Number"><input className={inputCls} value={form.client_phone_number || ''} onChange={(e) => setForm({ ...form, client_phone_number: e.target.value })} /></FormField>
-                      <FormField label="System"><input className={inputCls} value={form.client_system || ''} onChange={(e) => setForm({ ...form, client_system: e.target.value })} /></FormField>
-                      <FormField label="Customer Code"><input className={inputCls} value={form.client_customer_code || ''} onChange={(e) => setForm({ ...form, client_customer_code: e.target.value })} /></FormField>
-                      <FormField label="Job Title"><input className={inputCls} value={form.client_job_title || ''} onChange={(e) => setForm({ ...form, client_job_title: e.target.value })} /></FormField>
-                      <FormField label="Email"><input className={inputCls} value={form.client_email || ''} onChange={(e) => setForm({ ...form, client_email: e.target.value })} /></FormField>
-                      <FormField label="Expired Date"><input className={inputCls} value={form.client_expired_date || ''} onChange={(e) => setForm({ ...form, client_expired_date: e.target.value })} /></FormField>
-                      <FormField label="Date of Manufacture"><input className={inputCls} value={form.client_date_of_manufacture || ''} onChange={(e) => setForm({ ...form, client_date_of_manufacture: e.target.value })} /></FormField>
+                  {/* Client Details Section */}
+                  <div className="rounded-lg border border-border bg-muted/10 p-4 space-y-3">
+                    <div className="flex items-center gap-2 border-b border-border pb-2">
+                      <User className="size-4 text-primary" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">Client & Customer Information</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField label="Client Company / Name">
+                        <input className={inputCls} placeholder="Client Name" value={form.client_name || ''} onChange={(e) => setForm({ ...form, client_name: e.target.value })} />
+                      </FormField>
+                      <FormField label="Contact Person">
+                        <input className={inputCls} placeholder="Primary Contact" value={form.client_contact_person || ''} onChange={(e) => setForm({ ...form, client_contact_person: e.target.value })} />
+                      </FormField>
+                      <FormField label="Phone Number">
+                        <input className={inputCls} placeholder="+1-555-..." value={form.client_phone_number || ''} onChange={(e) => setForm({ ...form, client_phone_number: e.target.value })} />
+                      </FormField>
+                      <FormField label="System">
+                        <input className={inputCls} placeholder="System Type" value={form.client_system || ''} onChange={(e) => setForm({ ...form, client_system: e.target.value })} />
+                      </FormField>
+                      <FormField label="Customer Code">
+                        <input className={inputCls} placeholder="CUST-000" value={form.client_customer_code || ''} onChange={(e) => setForm({ ...form, client_customer_code: e.target.value })} />
+                      </FormField>
+                      <FormField label="Job Title">
+                        <input className={inputCls} placeholder="Plant Manager" value={form.client_job_title || ''} onChange={(e) => setForm({ ...form, client_job_title: e.target.value })} />
+                      </FormField>
+                      <FormField label="Email Address">
+                        <input type="email" className={inputCls} placeholder="client@example.com" value={form.client_email || ''} onChange={(e) => setForm({ ...form, client_email: e.target.value })} />
+                      </FormField>
+                      <FormField label="Expired Date">
+                        <input type="date" className={inputCls} value={form.client_expired_date || ''} onChange={(e) => setForm({ ...form, client_expired_date: e.target.value })} />
+                      </FormField>
+                      <FormField label="Date of Manufacture">
+                        <input type="date" className={inputCls} value={form.client_date_of_manufacture || ''} onChange={(e) => setForm({ ...form, client_date_of_manufacture: e.target.value })} />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeFormTab === 'technical' && (
+                <div className="space-y-6">
+                  {/* Technical Parameters */}
+                  <div className="rounded-lg border border-border bg-muted/10 p-4 space-y-3">
+                    <div className="flex items-center gap-2 border-b border-border pb-2">
+                      <Sliders className="size-4 text-primary" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">Technical & Electrical Specifications</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <FormField label="Frequency (Hz)"><input className={inputCls} placeholder="50/60 Hz" value={form.tech_freq || ''} onChange={(e) => setForm({ ...form, tech_freq: e.target.value })} /></FormField>
+                      <FormField label="Voltage (V)"><input className={inputCls} placeholder="400 V" value={form.tech_voltage || ''} onChange={(e) => setForm({ ...form, tech_voltage: e.target.value })} /></FormField>
+                      <FormField label="Amperage (A)"><input className={inputCls} placeholder="32 A" value={form.tech_amp || ''} onChange={(e) => setForm({ ...form, tech_amp: e.target.value })} /></FormField>
+                      <FormField label="Total MC Power"><input className={inputCls} placeholder="15 kW" value={form.tech_total_mc_power || ''} onChange={(e) => setForm({ ...form, tech_total_mc_power: e.target.value })} /></FormField>
+                      <FormField label="UPS System"><input className={inputCls} placeholder="Online 10kVA" value={form.tech_ups || ''} onChange={(e) => setForm({ ...form, tech_ups: e.target.value })} /></FormField>
+                      <FormField label="Chiller Cooling"><input className={inputCls} placeholder="Water Cooled" value={form.tech_chiller_cooling_system || ''} onChange={(e) => setForm({ ...form, tech_chiller_cooling_system: e.target.value })} /></FormField>
+                      <FormField label="Chiller Absorbed Power"><input className={inputCls} placeholder="5.5 kW" value={form.tech_chiller_absorbed_power || ''} onChange={(e) => setForm({ ...form, tech_chiller_absorbed_power: e.target.value })} /></FormField>
+                      <FormField label="Smoke Extractor"><input className={inputCls} placeholder="Active / Integrated" value={form.tech_smoke_extractor || ''} onChange={(e) => setForm({ ...form, tech_smoke_extractor: e.target.value })} /></FormField>
+                      <FormField label="Room Temp (°C)"><input className={inputCls} placeholder="22°C" value={form.tech_room_temp || ''} onChange={(e) => setForm({ ...form, tech_room_temp: e.target.value })} /></FormField>
                     </div>
                   </div>
 
-                  {/* Technical Information */}
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Technical Information</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Freq"><input className={inputCls} value={form.tech_freq || ''} onChange={(e) => setForm({ ...form, tech_freq: e.target.value })} /></FormField>
-                      <FormField label="Voltage"><input className={inputCls} value={form.tech_voltage || ''} onChange={(e) => setForm({ ...form, tech_voltage: e.target.value })} /></FormField>
-                      <FormField label="Amp"><input className={inputCls} value={form.tech_amp || ''} onChange={(e) => setForm({ ...form, tech_amp: e.target.value })} /></FormField>
-                      <FormField label="Total MC Power"><input className={inputCls} value={form.tech_total_mc_power || ''} onChange={(e) => setForm({ ...form, tech_total_mc_power: e.target.value })} /></FormField>
-                      <FormField label="UPS"><input className={inputCls} value={form.tech_ups || ''} onChange={(e) => setForm({ ...form, tech_ups: e.target.value })} /></FormField>
-                      <FormField label="Chiller Cooling System"><input className={inputCls} value={form.tech_chiller_cooling_system || ''} onChange={(e) => setForm({ ...form, tech_chiller_cooling_system: e.target.value })} /></FormField>
-                      <FormField label="Chiller Absorbed Power"><input className={inputCls} value={form.tech_chiller_absorbed_power || ''} onChange={(e) => setForm({ ...form, tech_chiller_absorbed_power: e.target.value })} /></FormField>
-                      <FormField label="Smoke Extractor"><input className={inputCls} value={form.tech_smoke_extractor || ''} onChange={(e) => setForm({ ...form, tech_smoke_extractor: e.target.value })} /></FormField>
-                      <FormField label="Room Temp"><input className={inputCls} value={form.tech_room_temp || ''} onChange={(e) => setForm({ ...form, tech_room_temp: e.target.value })} /></FormField>
+                  {/* Signatures & Verification */}
+                  <div className="rounded-lg border border-border bg-muted/10 p-4 space-y-3">
+                    <div className="flex items-center gap-2 border-b border-border pb-2">
+                      <FileCheck className="size-4 text-primary" />
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">Signatures & Signoff Status</h4>
                     </div>
-                  </div>
-
-                  {/* Signatures */}
-                  <div>
-                    <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground border-b border-border pb-1">Signatures</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField label="Signed By (Name)"><input className={inputCls} value={form.sign_signed_by || ''} onChange={(e) => setForm({ ...form, sign_signed_by: e.target.value })} /></FormField>
-                      <FormField label="Technician Signature (Name/Initials)"><input className={inputCls} value={form.sign_technician_signature || ''} onChange={(e) => setForm({ ...form, sign_technician_signature: e.target.value })} /></FormField>
-                      <FormField label="Signature Date"><input type="date" className={inputCls} value={form.sign_date || ''} onChange={(e) => setForm({ ...form, sign_date: e.target.value })} /></FormField>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField label="Signed By (Name)">
+                        <input className={inputCls} placeholder="Client Representative Name" value={form.sign_signed_by || ''} onChange={(e) => setForm({ ...form, sign_signed_by: e.target.value })} />
+                      </FormField>
+                      <FormField label="Technician Signature (Name/Initials)">
+                        <input className={inputCls} placeholder="Technician Name" value={form.sign_technician_signature || ''} onChange={(e) => setForm({ ...form, sign_technician_signature: e.target.value })} />
+                      </FormField>
+                      <FormField label="Signature Date">
+                        <input type="date" className={inputCls} value={form.sign_date || ''} onChange={(e) => setForm({ ...form, sign_date: e.target.value })} />
+                      </FormField>
                       
-                      <div className="flex flex-col justify-center space-y-2 pt-6">
-                        <label className="flex items-center gap-2 text-sm font-medium">
-                          <input type="checkbox" className="size-4" checked={form.sign_completed || false} onChange={(e) => setForm({ ...form, sign_completed: e.target.checked })} />
-                          Completed
-                        </label>
-                        <label className="flex items-center gap-2 text-sm font-medium">
-                          <input type="checkbox" className="size-4" checked={form.sign_incompleted || false} onChange={(e) => setForm({ ...form, sign_incompleted: e.target.checked })} />
-                          Incompleted
-                        </label>
+                      <div className="flex flex-col justify-center space-y-2 rounded-lg border border-border bg-card p-3">
+                        <span className="text-xs font-medium text-muted-foreground mb-1">Installation Status:</span>
+                        <div className="flex items-center gap-6">
+                          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                            <input type="checkbox" className="size-4 rounded accent-primary" checked={form.sign_completed || false} onChange={(e) => setForm({ ...form, sign_completed: e.target.checked })} />
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Completed</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                            <input type="checkbox" className="size-4 rounded accent-primary" checked={form.sign_incompleted || false} onChange={(e) => setForm({ ...form, sign_incompleted: e.target.checked })} />
+                            <span className="text-amber-600 dark:text-amber-400 font-semibold">Incompleted</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </details>
+              )}
             </div>
-            <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
-              <Button variant="outline" onClick={formModal.close}>
-                Cancel
-              </Button>
-              <Button onClick={saveMachine} disabled={!form.id.trim() || !form.name.trim() || !form.installDate || saving}>
-                {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-                {formMode === 'create' ? 'Create machine' : 'Save changes'}
-              </Button>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-border bg-muted/30 px-6 py-4">
+              <div className="flex items-center gap-2">
+                {activeFormTab !== 'general' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setActiveFormTab(activeFormTab === 'technical' ? 'certificate' : 'general')}
+                  >
+                    Previous Step
+                  </Button>
+                )}
+                {activeFormTab !== 'technical' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setActiveFormTab(activeFormTab === 'general' ? 'certificate' : 'technical')}
+                  >
+                    Next Step
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <Button type="button" variant="outline" onClick={formModal.close}>
+                  Cancel
+                </Button>
+                <Button onClick={saveMachine} disabled={!form.id.trim() || !form.name.trim() || !form.installDate || saving}>
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {formMode === 'create' ? 'Create Machine' : 'Save Changes'}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
