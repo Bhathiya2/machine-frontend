@@ -9,6 +9,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ShieldAlert,
   ShieldCheck,
   Trash2,
   Truck,
@@ -32,7 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge, Card, FormField, inputCls, selectCls } from '@/pages/dashboard/components/DashboardUI'
-import { formatDate } from '@/pages/dashboard/utils/formatters'
+import { formatDate, warrantyStatus } from '@/pages/dashboard/utils/formatters'
 import { priorityColor, woStatusColor, woStatusIcon } from '@/pages/dashboard/utils/statusHelpers'
 import type { WorkOrderFormData } from './workOrderMapper'
 import {
@@ -396,6 +397,30 @@ export function WorkOrdersView({
                   ))}
                 </select>
               </FormField>
+
+              {(() => {
+                if (!form.machineId) return null
+                const machine = machines.find(m => m.id === form.machineId)
+                if (!machine) return null
+                const warranty = machine.installDate ? warrantyStatus(machine.installDate, machine.cert_warranty) : null
+
+                return (
+                  <div className="space-y-2 rounded-lg border bg-muted/30 p-3 text-xs">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                      <div><strong>Model:</strong> {machine.model}</div>
+                      <div><strong>Site:</strong> {machine.site}</div>
+                      <div><strong>Status:</strong> <span className="font-medium">{machine.status}</span></div>
+                      {warranty && (
+                        <div className={`font-medium ${warranty.active ? 'text-emerald-700' : 'text-red-700'}`}>
+                          <strong>Warranty:</strong> {warranty.active ? 'Active' : 'Expired'}
+                          <span className="text-xs text-muted-foreground"> ({warranty.label})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+
               <FormField label="Title">
                 <input className={inputCls} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </FormField>
@@ -455,6 +480,25 @@ export function WorkOrdersView({
             </div>
             <div className="space-y-4 p-6">
               <p className="text-sm leading-relaxed">{activeView.description}</p>
+              {(() => {
+                const machine = machines.find(m => m.id === activeView.machineId)
+                if (!machine || !machine.installDate) return null
+                const warranty = warrantyStatus(machine.installDate, machine.cert_warranty)
+                return (
+                  <div className={`rounded-lg border p-3 ${warranty.active ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
+                    <div className={`flex items-center gap-2 text-sm font-semibold ${warranty.active ? 'text-emerald-800' : 'text-red-800'}`}>
+                      {warranty.active ? <ShieldCheck size={16} /> : <ShieldAlert size={16} />}
+                      Machine Warranty
+                    </div>
+                    <p className={`mt-1 text-sm ${warranty.active ? 'text-emerald-700' : 'text-red-700'}`}>
+                      {warranty.active
+                        ? `Warranty is active and expires on ${formatDate(warranty.expires)}. (${warranty.label})`
+                        : `Warranty expired on ${formatDate(warranty.expires)}.`
+                      }
+                    </p>
+                  </div>
+                )
+              })()}
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-lg border p-3"><span className="text-xs text-muted-foreground">Created</span><p className="font-medium">{formatDate(activeView.createdAt)}</p></div>
                 <div className="rounded-lg border p-3"><span className="text-xs text-muted-foreground">Updated</span><p className="font-medium">{formatDate(activeView.updatedAt)}</p></div>

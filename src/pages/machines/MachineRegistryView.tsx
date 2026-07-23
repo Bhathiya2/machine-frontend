@@ -358,7 +358,7 @@ export function MachineRegistryView({
               </TableRow>
             ) : (
               pageItems.map((machine) => {
-                const warranty = warrantyStatus(machine.installDate)
+                const warranty = warrantyStatus(machine.installDate, machine.cert_warranty)
                 const { repairCount, openFaultCount } = machineMeta(machine.id)
 
                 return (
