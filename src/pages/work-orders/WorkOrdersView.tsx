@@ -322,6 +322,7 @@ export function WorkOrdersView({
                 <TableHead className="px-4">Machine</TableHead>
                 <TableHead className="px-4">Technician</TableHead>
                 <TableHead className="px-4">Status</TableHead>
+                <TableHead className="px-4">Warranty</TableHead>
                 <TableHead className="px-4">Priority</TableHead>
                 <TableHead className="px-4">Created</TableHead>
                 <TableHead className="px-4 text-right">Actions</TableHead>
@@ -330,7 +331,7 @@ export function WorkOrdersView({
             <TableBody>
               {pageItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
                     No work orders found
                   </TableCell>
                 </TableRow>
@@ -343,6 +344,19 @@ export function WorkOrdersView({
                     <TableCell className="px-4 text-sm">{getUserName(order.assignedTo)}</TableCell>
                     <TableCell className="px-4">
                       <Badge className={woStatusColor(order.status)}>{woStatusIcon(order.status)}{order.status}</Badge>
+                    </TableCell>
+                    <TableCell className="px-4">
+                      {(() => {
+                        const machine = machines.find(m => m.id === order.machineId);
+                        if (!machine || !machine.installDate) return <span className="text-muted-foreground">—</span>;
+                        const warranty = warrantyStatus(machine.installDate, machine.cert_warranty);
+                        return (
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${warranty.active ? 'text-emerald-700' : 'text-red-700'}`}>
+                            {warranty.active ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
+                            {warranty.active ? 'Active' : 'Expired'}
+                          </span>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="px-4">
                       <Badge className={priorityColor(order.priority)}>{order.priority}</Badge>
