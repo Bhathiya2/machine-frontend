@@ -2,7 +2,16 @@ import axios from 'axios'
 import { usePermissions } from '@/hooks/permission/usePermissions'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, Shield, Trash2, X, ChevronDown } from 'lucide-react'
+import {
+  Check,
+  CheckCheck,
+  ChevronDown,
+  Pencil,
+  Plus,
+  Shield,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { permissionRepository, roleRepository } from '@/repositories'
 import { PERMISSIONS } from '@/pages/dashboard/permissions'
 import { TablePaginationBar, useTablePagination } from '@/components/TablePagination'
@@ -72,6 +81,7 @@ export function RoleManagementView() {
     setMode('create')
     setSelected(null)
     setForm(EMPTY_FORM)
+    setOpenGroups([])
     setModalOpen(true)
   }
 
@@ -83,6 +93,7 @@ export function RoleManagementView() {
       description: role.description ?? '',
       permission_ids: role.permissions.map((p) => Number(p.id)),
     })
+    setOpenGroups([])
     setModalOpen(true)
   }
 
@@ -252,45 +263,104 @@ export function RoleManagementView() {
                   {Object.entries(groupedPermissions).map(([group, items]) => {
                     const allSelected = items.every(item => form.permission_ids.includes(Number(item.id)))
                     const someSelected = items.some(item => form.permission_ids.includes(Number(item.id)))
+                    const selectedCount = items.filter(item =>
+                      form.permission_ids.includes(Number(item.id)),
+                    ).length
                     const isOpen = openGroups.includes(group)
 
                     return (
-                      <div key={group} className="rounded-lg border">
-                        <div
-                          className="flex cursor-pointer items-center justify-between p-3"
+                      <div
+                        key={group}
+                        className="overflow-hidden rounded-xl border bg-background transition-shadow hover:shadow-sm"
+                      >
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-between gap-3 p-3 text-left"
                           onClick={() => toggleGroup(group)}
                         >
-                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group}</p>
-                          <div className="flex items-center gap-3">
-                            <label
-                              className="flex items-center gap-2 text-sm"
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={allSelected}
-                                ref={(el) => {
-                                  if (el) el.indeterminate = someSelected && !allSelected
-                                }}
-                                onChange={() => toggleGroupPermissions(items)}
-                              />
-                              <span>Select all</span>
-                            </label>
-                            <ChevronDown className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`} size={16} />
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              {group}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {selectedCount} of {items.length} selected
+                            </p>
                           </div>
-                        </div>
+                          <ChevronDown
+                            className={`shrink-0 transition-transform duration-200 ${
+                              isOpen ? 'rotate-180' : ''
+                            }`}
+                            size={17}
+                          />
+                        </button>
+
                         {isOpen && (
-                          <div className="grid gap-2 border-t p-3 sm:grid-cols-2">
-                            {items.map((permission) => (
-                              <label key={permission.id} className="flex items-center gap-2 text-sm">
-                                <input
-                                  type="checkbox"
-                                  checked={form.permission_ids.includes(Number(permission.id))}
-                                  onChange={() => togglePermission(Number(permission.id))}
-                                />
-                                <span>{permission.label}</span>
-                              </label>
-                            ))}
+                          <div className="border-t p-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleGroupPermissions(items)}
+                              aria-pressed={allSelected}
+                              className={`group mb-3 flex w-full items-center justify-between gap-4 rounded-xl border p-3 text-left transition-all duration-200 ${
+                                allSelected
+                                  ? 'border-primary/40 bg-primary/10 shadow-sm'
+                                  : someSelected
+                                    ? 'border-primary/25 bg-primary/5'
+                                    : 'border-dashed bg-muted/30 hover:border-primary/30 hover:bg-primary/5'
+                              }`}
+                            >
+                              <span className="flex min-w-0 items-center gap-3">
+                                <span
+                                  className={`flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                    allSelected
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-background text-primary shadow-sm ring-1 ring-border'
+                                  }`}
+                                >
+                                  {allSelected ? (
+                                    <CheckCheck className="size-5" />
+                                  ) : (
+                                    <Check className="size-5" />
+                                  )}
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-sm font-semibold">
+                                    {allSelected ? 'All permissions selected' : 'Select all permissions'}
+                                  </span>
+                                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                                    {allSelected
+                                      ? `All ${items.length} permissions in this group are active`
+                                      : `Enable all ${items.length} permissions in this group at once`}
+                                  </span>
+                                </span>
+                              </span>
+
+                              <span
+                                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                                  allSelected
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-background text-muted-foreground ring-1 ring-border group-hover:text-primary'
+                                }`}
+                              >
+                                {allSelected ? 'Clear all' : `${selectedCount}/${items.length}`}
+                              </span>
+                            </button>
+
+                            <div className="grid gap-1 sm:grid-cols-2">
+                              {items.map((permission) => (
+                                <label
+                                  key={permission.id}
+                                  className="flex cursor-pointer items-center gap-2 rounded-md p-2 text-sm transition-colors hover:bg-muted/50"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="size-4 rounded border-muted-foreground/40 accent-primary"
+                                    checked={form.permission_ids.includes(Number(permission.id))}
+                                    onChange={() => togglePermission(Number(permission.id))}
+                                  />
+                                  <span>{permission.label}</span>
+                                </label>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
