@@ -2,7 +2,7 @@ import axios from 'axios'
 import { usePermissions } from '@/hooks/permission/usePermissions'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Pencil, Shield, Trash2, X } from 'lucide-react'
+import { Plus, Pencil, Shield, Trash2, X, ChevronDown } from 'lucide-react'
 import { permissionRepository, roleRepository } from '@/repositories'
 import { PERMISSIONS } from '@/pages/dashboard/permissions'
 import { TablePaginationBar, useTablePagination } from '@/components/TablePagination'
@@ -26,6 +26,7 @@ export function RoleManagementView() {
   const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [selected, setSelected] = useState<RoleItem | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [openGroups, setOpenGroups] = useState<string[]>([])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -91,6 +92,23 @@ export function RoleManagementView() {
       permission_ids: prev.permission_ids.includes(permissionId)
         ? prev.permission_ids.filter((id) => id !== permissionId)
         : [...prev.permission_ids, permissionId],
+    }))
+  }
+
+  const toggleGroup = (group: string) => {
+    setOpenGroups(prev =>
+      prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group],
+    )
+  }
+
+  const toggleGroupPermissions = (items: PermissionItem[]) => {
+    const itemIds = items.map(item => Number(item.id))
+    const allSelected = itemIds.every(id => form.permission_ids.includes(id))
+    setForm(prev => ({
+      ...prev,
+      permission_ids: allSelected
+        ? prev.permission_ids.filter(id => !itemIds.includes(id))
+        : [...new Set([...prev.permission_ids, ...itemIds])],
     }))
   }
 
@@ -230,24 +248,54 @@ export function RoleManagementView() {
               </FormField>
               <div>
                 <p className="mb-3 text-sm font-medium">Permissions</p>
-                <div className="space-y-4">
-                  {Object.entries(groupedPermissions).map(([group, items]) => (
-                    <div key={group} className="rounded-lg border p-3">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group}</p>
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {items.map((permission) => (
-                          <label key={permission.id} className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={form.permission_ids.includes(Number(permission.id))}
-                              onChange={() => togglePermission(Number(permission.id))}
-                            />
-                            <span>{permission.label}</span>
-                          </label>
-                        ))}
+                <div className="space-y-2">
+                  {Object.entries(groupedPermissions).map(([group, items]) => {
+                    const allSelected = items.every(item => form.permission_ids.includes(Number(item.id)))
+                    const someSelected = items.some(item => form.permission_ids.includes(Number(item.id)))
+                    const isOpen = openGroups.includes(group)
+
+                    return (
+                      <div key={group} className="rounded-lg border">
+                        <div
+                          className="flex cursor-pointer items-center justify-between p-3"
+                          onClick={() => toggleGroup(group)}
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group}</p>
+                          <div className="flex items-center gap-3">
+                            <label
+                              className="flex items-center gap-2 text-sm"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={allSelected}
+                                ref={(el) => {
+                                  if (el) el.indeterminate = someSelected && !allSelected
+                                }}
+                                onChange={() => toggleGroupPermissions(items)}
+                              />
+                              <span>Select all</span>
+                            </label>
+                            <ChevronDown className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`} size={16} />
+                          </div>
+                        </div>
+                        {isOpen && (
+                          <div className="grid gap-2 border-t p-3 sm:grid-cols-2">
+                            {items.map((permission) => (
+                              <label key={permission.id} className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={form.permission_ids.includes(Number(permission.id))}
+                                  onChange={() => togglePermission(Number(permission.id))}
+                                />
+                                <span>{permission.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
