@@ -2,11 +2,11 @@ import { WO_FLOW } from '@/pages/dashboard/constants'
 import type { WorkOrderStatus } from '@/pages/dashboard/types'
 
 export function isWoFinal(status: WorkOrderStatus) {
-  return status === 'Verified & Closed' || status === 'Cancelled'
+  return status === 'Verified' || status === 'Finished'
 }
 
 export function woFlowIndex(status: WorkOrderStatus) {
-  if (status === 'Cancelled') return -1
+  if (status === 'Close') return -1
   return WO_FLOW.indexOf(status)
 }
 
@@ -18,36 +18,30 @@ export function woNextStatus(current: WorkOrderStatus): WorkOrderStatus | null {
 
 export function woFlowLabel(status: WorkOrderStatus) {
   switch (status) {
-    case 'Assigned':
-      return 'Assigned'
-    case 'Technician En Route':
-      return 'En Route'
-    case 'Technician Arrived':
-      return 'On Site'
-    case 'Work In Progress':
+    case 'New':
+      return 'New'
+    case 'Inprogress':
       return 'In Progress'
-    case 'Work Completed':
-      return 'Completed'
-    case 'Verified & Closed':
+    case 'Close':
+      return 'Closed'
+    case 'Verified':
       return 'Verified'
-    case 'Cancelled':
-      return 'Cancelled'
+    case 'Finished':
+      return 'Finished'
   }
 }
 
 export function woActionLabel(target: WorkOrderStatus) {
   switch (target) {
-    case 'Technician En Route':
-      return 'Mark En Route'
-    case 'Technician Arrived':
-      return 'Check In'
-    case 'Work In Progress':
+    case 'Inprogress':
       return 'Start Work'
-    case 'Work Completed':
-      return 'Mark Complete'
-    case 'Verified & Closed':
-      return 'Verify & Close'
-    case 'Assigned':
+    case 'Close':
+        return 'Close Work'
+    case 'Verified':
+      return 'Mark as Verified'
+    case 'Finished':
+      return 'Mark as Finished'
+    case 'New':
       return 'Re-Open'
     default:
       return target
@@ -55,7 +49,7 @@ export function woActionLabel(target: WorkOrderStatus) {
 }
 
 export function canTransitionTo(current: WorkOrderStatus, target: WorkOrderStatus) {
-  if (target === 'Cancelled') return !isWoFinal(current)
-  if (isWoFinal(current) && target === 'Assigned') return true
+  if (current === 'Close' && target === 'Inprogress') return true
+  if (target === 'Close' && current === 'Inprogress') return true
   return woNextStatus(current) === target
 }

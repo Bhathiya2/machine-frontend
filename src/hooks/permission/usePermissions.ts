@@ -61,7 +61,7 @@ export function usePermissions() {
       if (!target) {
         if (isSuperAdmin) return !isWoFinal(order.status)
         if (can('workorders.update')) return !isWoFinal(order.status)
-        if (can('workorders.verify_close') && order.status === 'Work Completed') return true
+        if (can('workorders.verify_close') && order.status === 'Verified') return true
         if (can('workorders.cancel') && !isWoFinal(order.status)) return true
         if (can('workorders.update_status') && order.assignedTo === currentUser.id) {
           return !isWoFinal(order.status)
@@ -73,12 +73,20 @@ export function usePermissions() {
 
       if (isSuperAdmin) return true
 
-      if (target === 'Verified & Closed' || (target === 'Assigned' && isWoFinal(order.status))) {
-        return can('workorders.verify_close')
+      if (target === 'Finished' && order.status === 'Verified') {
+        return hasRole('Finance')
       }
 
-      if (target === 'Cancelled') {
+      if (target === 'Verified') {
+        return can('workorders.verify_close') || (order.assignedTo === currentUser.id && can('workorders.update_status'))
+      }
+
+      if (target === 'Close') {
         return can('workorders.cancel')
+      }
+
+      if (target === 'Inprogress' && order.status === 'Close') {
+        return can('workorders.update')
       }
 
       if (can('workorders.update')) return true
@@ -87,7 +95,7 @@ export function usePermissions() {
 
       return true
     },
-    [can, currentUser, isSuperAdmin]
+    [can, hasRole, currentUser, isSuperAdmin]
   )
 
   const canUpdateWorkOrderNotes = useCallback(

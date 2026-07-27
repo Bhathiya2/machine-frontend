@@ -25,38 +25,30 @@ export function statusColor(status: MachineStatus) {
 
 export function woStatusColor(status: WorkOrderStatus) {
   switch (status) {
-    case 'Assigned':
+    case 'New':
       return 'bg-blue-100 text-blue-800'
-    case 'Technician En Route':
-      return 'bg-purple-100 text-purple-800'
-    case 'Technician Arrived':
-      return 'bg-cyan-100 text-cyan-800'
-    case 'Work In Progress':
+    case 'Inprogress':
       return 'bg-yellow-100 text-yellow-800'
-    case 'Work Completed':
+    case 'Finished':
       return 'bg-orange-100 text-orange-800'
-    case 'Verified & Closed':
+    case 'Verified':
       return 'bg-green-100 text-green-800'
-    case 'Cancelled':
+    case 'Close':
       return 'bg-red-100 text-red-700'
   }
 }
 
 export function woStatusIcon(status: WorkOrderStatus) {
   switch (status) {
-    case 'Assigned':
+    case 'New':
       return <Clock size={14} />
-    case 'Technician En Route':
-      return <Truck size={14} />
-    case 'Technician Arrived':
-      return <Navigation size={14} />
-    case 'Work In Progress':
+    case 'Inprogress':
       return <Wrench size={14} />
-    case 'Work Completed':
+    case 'Finished':
       return <CheckCircle2 size={14} />
-    case 'Verified & Closed':
+    case 'Verified':
       return <ShieldCheck size={14} />
-    case 'Cancelled':
+    case 'Close':
       return <XCircle size={14} />
   }
 }

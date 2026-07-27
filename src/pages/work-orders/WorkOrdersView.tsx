@@ -4,7 +4,8 @@ import {
   CheckCircle2,
   Eye,
   Loader2,
-  Navigation,
+  LogIn,
+  LogOut,
   Pencil,
   Plus,
   RefreshCw,
@@ -12,7 +13,6 @@ import {
   ShieldAlert,
   ShieldCheck,
   Trash2,
-  Truck,
   Wrench,
   X,
   XCircle,
@@ -48,13 +48,11 @@ import type { AppUser, FaultReport, Machine, WorkOrder, WorkOrderStatus } from '
 
 const STATUSES: Array<WorkOrderStatus | 'All'> = [
   'All',
-  'Assigned',
-  'Technician En Route',
-  'Technician Arrived',
-  'Work In Progress',
-  'Work Completed',
-  'Verified & Closed',
-  'Cancelled',
+  'New',
+  'Inprogress',
+  'Close',
+  'Verified',
+  'Finished',
 ]
 
 const EMPTY_FORM: WorkOrderFormData = {
@@ -63,7 +61,7 @@ const EMPTY_FORM: WorkOrderFormData = {
   description: '',
   assignedTo: '',
   priority: 'Medium',
-  status: 'Assigned',
+  status: 'New',
   notes: '',
 }
 
@@ -77,6 +75,8 @@ interface WorkOrdersViewProps {
   onUpdateStatus: (dbId: number, status: WorkOrderStatus) => Promise<WorkOrder | null>
   onUpdateNotes: (dbId: number, notes: string) => Promise<WorkOrder | null>
   onDelete: (dbId: number) => Promise<boolean>
+  onCheckIn: (dbId: number) => Promise<WorkOrder | null>
+  onCheckOut: (dbId: number) => Promise<WorkOrder | null>
   machines: Machine[]
   users: AppUser[]
   currentUser: AppUser
@@ -95,6 +95,8 @@ export function WorkOrdersView({
   onUpdateStatus,
   onUpdateNotes,
   onDelete,
+  onCheckIn,
+  onCheckOut,
   machines,
   users,
   currentUser,
@@ -114,7 +116,9 @@ export function WorkOrdersView({
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | 'All'>('All')
-  const [technicianFilter, setTechnicianFilter] = useState('All')
+  const [technicianFilter, setTechnicianFilter] = useState(
+    currentUser.role === 'Technician' ? currentUser.id : 'All'
+  )
   const [machineFilter, setMachineFilter] = useState('All')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -152,7 +156,7 @@ export function WorkOrdersView({
 
   const sortedOrders = useMemo(() => {
     const rank = (status: WorkOrderStatus) =>
-      status === 'Verified & Closed' || status === 'Cancelled' ? 1 : 0
+      status === 'Verified' || status === 'Finished' ? 1 : 0
     return [...workOrders].sort((a, b) => {
       const byStatus = rank(a.status) - rank(b.status)
       if (byStatus !== 0) return byStatus
@@ -226,6 +230,22 @@ export function WorkOrdersView({
     }
   }
 
+  const checkIn = async (order: WorkOrder) => {
+    if (!order.dbId) return
+    const updated = await onCheckIn(order.dbId)
+    if (updated) {
+      setViewOrder(updated)
+    }
+  }
+
+  const checkOut = async (order: WorkOrder) => {
+    if (!order.dbId) return
+    const updated = await onCheckOut(order.dbId)
+    if (updated) {
+      setViewOrder(updated)
+    }
+  }
+
   const saveNotes = async () => {
     if (!viewOrder?.dbId) return
     const updated = await onUpdateNotes(viewOrder.dbId, notesDraft)
@@ -258,9 +278,10 @@ export function WorkOrdersView({
   const canAdvance =
     activeView && nextStatus ? canUpdateWorkOrderStatus(activeView, nextStatus) : false
   const canReopen =
-    activeView && isWoFinal(activeView.status)
-      ? canUpdateWorkOrderStatus(activeView, 'Assigned')
+    activeView && activeView.status === 'Close'
+      ? canUpdateWorkOrderStatus(activeView, 'Inprogress')
       : false
+  const isCheckedIn = activeView && activeView.active_technician_id === currentUser.id
 
   return (
     <div className="space-y-4">
@@ -530,10 +551,10 @@ export function WorkOrdersView({
 
               <div className="space-y-3 border-t pt-4">
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Status flow</p>
-                {activeView.status === 'Cancelled' ? (
+                {activeView.status === 'Close' ? (
                   <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
                     <XCircle size={15} />
-                    This work order has been cancelled.
+                    This work order has been closed.
                   </div>
                 ) : (
                   <div className="flex items-start overflow-x-auto pb-1">
@@ -572,20 +593,28 @@ export function WorkOrdersView({
               {!isWoFinal(activeView.status) && (
                 <div className="space-y-2 border-t pt-4">
                   <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Next action</p>
+                  {isCheckedIn ? (
+                    <Button className="w-full sm:w-auto" disabled={saving} onClick={() => checkOut(activeView)}>
+                      <LogOut size={15} /> Check Out
+                    </Button>
+                  ) : (
+                    <Button className="w-full sm:w-auto" disabled={saving} onClick={() => checkIn(activeView)}>
+                      <LogIn size={15} /> Check In
+                    </Button>
+                  )}
+
                   {canAdvance && nextStatus ? (
                     <Button
                       className="w-full sm:w-auto"
                       disabled={saving}
                       onClick={() => jumpStatus(activeView, nextStatus)}
                     >
-                      {nextStatus === 'Technician En Route' && <Truck size={15} />}
-                      {nextStatus === 'Technician Arrived' && <Navigation size={15} />}
-                      {nextStatus === 'Work In Progress' && <Wrench size={15} />}
-                      {nextStatus === 'Work Completed' && <CheckCircle2 size={15} />}
-                      {nextStatus === 'Verified & Closed' && <ShieldCheck size={15} />}
+                      {nextStatus === 'Inprogress' && <Wrench size={15} />}
+                      {nextStatus === 'Verified' && <ShieldCheck size={15} />}
+                      {nextStatus === 'Finished' && <CheckCircle2 size={15} />}
                       {woActionLabel(nextStatus)}
                     </Button>
-                  ) : activeView.status === 'Work Completed' ? (
+                  ) : activeView.status === 'Verified' ? (
                     <p className="text-sm text-muted-foreground">
                       Work is complete. Waiting for manager or owner to verify and close.
                     </p>
@@ -600,10 +629,10 @@ export function WorkOrdersView({
                       size="sm"
                       variant="destructive"
                       disabled={saving}
-                      onClick={() => jumpStatus(activeView, 'Cancelled')}
+                      onClick={() => jumpStatus(activeView, 'Close')}
                     >
                       <XCircle size={15} />
-                      Cancel WO
+                      Close WO
                     </Button>
                   )}
                 </div>
@@ -614,7 +643,7 @@ export function WorkOrdersView({
                   <Button
                     variant="outline"
                     disabled={saving}
-                    onClick={() => jumpStatus(activeView, 'Assigned')}
+                    onClick={() => jumpStatus(activeView, 'Inprogress')}
                   >
                     <ArrowRight size={15} />
                     Re-Open work order
@@ -622,10 +651,10 @@ export function WorkOrdersView({
                 </div>
               )}
 
-              {isWoFinal(activeView.status) && activeView.status === 'Verified & Closed' && (
+              {isWoFinal(activeView.status) && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
                   <ShieldCheck size={15} />
-                  This work order is verified and closed.
+                  This work order is {activeView.status.toLowerCase()}.
                 </div>
               )}
             </div>

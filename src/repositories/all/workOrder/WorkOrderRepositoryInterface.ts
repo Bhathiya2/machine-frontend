@@ -10,4 +10,6 @@ export interface WorkOrderRepositoryInterface {
   updateNotes(dbId: number, notes: string): Promise<WorkOrder>
   updateCostEntries(dbId: number, entries: import('@/pages/dashboard/types').CostEntry[]): Promise<WorkOrder>
   delete(dbId: number): Promise<void>
+  checkIn(dbId: number): Promise<WorkOrder>
+  checkOut(dbId: number): Promise<WorkOrder>
 }

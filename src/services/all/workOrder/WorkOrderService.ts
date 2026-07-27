@@ -24,6 +24,16 @@ class WorkOrderService extends BaseService<WorkOrderApi, CreateWorkOrderDto, Upd
     const data = unwrap(response)
     return Array.isArray(data) ? data : []
   }
+
+  async checkIn(id: number): Promise<WorkOrderApi> {
+    const response = await workOrderApi.checkIn(id)
+    return unwrap(response)
+  }
+
+  async checkOut(id: number): Promise<WorkOrderApi> {
+    const response = await workOrderApi.checkOut(id)
+    return unwrap(response)
+  }
 }
 
 export const workOrderService = new WorkOrderService()

@@ -1,12 +1,10 @@
 import type { IssueCategory, ViewName, WorkOrderStatus } from './types'
 
 export const WO_FLOW: WorkOrderStatus[] = [
-  'Assigned',
-  'Technician En Route',
-  'Technician Arrived',
-  'Work In Progress',
-  'Work Completed',
-  'Verified & Closed',
+  'New',
+  'Inprogress',
+  'Verified',
+  'Finished',
 ]
 
 export const SITES = ['Plant A', 'Plant B', 'Plant C', 'Plant D', 'Head Office']

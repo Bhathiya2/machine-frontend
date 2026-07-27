@@ -16,6 +16,8 @@ export default function WorkOrdersPage() {
       onUpdateStatus={ctx.updateWorkOrderStatus}
       onUpdateNotes={ctx.updateWorkOrderNotes}
       onDelete={ctx.deleteWorkOrder}
+      onCheckIn={ctx.checkInWorkOrder}
+      onCheckOut={ctx.checkOutWorkOrder}
       machines={ctx.machines}
       users={ctx.users}
       currentUser={ctx.currentUser}

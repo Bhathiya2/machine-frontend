@@ -50,6 +50,8 @@ interface DashboardContextValue {
   updateWorkOrderNotes: (dbId: number, notes: string) => Promise<WorkOrder | null>
   updateWorkOrderCosts: (dbId: number, entries: CostEntry[]) => Promise<WorkOrder | null>
   deleteWorkOrder: (dbId: number) => Promise<boolean>
+  checkInWorkOrder: (dbId: number) => Promise<WorkOrder | null>
+  checkOutWorkOrder: (dbId: number) => Promise<WorkOrder | null>
   techniciansLoading: boolean
   techniciansSaving: boolean
   loadTechnicians: () => Promise<void>
@@ -282,7 +284,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       const order = await workOrderRepository.updateStatus(dbId, status)
       setWorkOrders((prev) => prev.map((item) => (item.dbId === dbId ? order : item)))
       toast.success('Status updated')
-      if (status === 'Verified & Closed') {
+      if (status === 'Verified') {
         await Promise.all([loadRepairRecords(), loadNotifications()])
       }
       return order
@@ -327,6 +329,38 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     } catch {
       toast.error('Failed to delete work order')
       return false
+    } finally {
+      setWorkOrdersSaving(false)
+    }
+  }, [])
+
+  const checkInWorkOrder = useCallback(async (dbId: number) => {
+    setWorkOrdersSaving(true)
+    try {
+      const order = await workOrderRepository.checkIn(dbId)
+      setWorkOrders((prev) => prev.map((item) => (item.dbId === dbId ? order : item)))
+      toast.success('Checked in')
+      return order
+    } catch (e: any) {
+      const message = e?.response?.data?.message ?? 'Failed to check in'
+      toast.error(message)
+      return null
+    } finally {
+      setWorkOrdersSaving(false)
+    }
+  }, [])
+
+  const checkOutWorkOrder = useCallback(async (dbId: number) => {
+    setWorkOrdersSaving(true)
+    try {
+      const order = await workOrderRepository.checkOut(dbId)
+      setWorkOrders((prev) => prev.map((item) => (item.dbId === dbId ? order : item)))
+      toast.success('Checked out')
+      return order
+    } catch (e: any) {
+      const message = e?.response?.data?.message ?? 'Failed to check out'
+      toast.error(message)
+      return null
     } finally {
       setWorkOrdersSaving(false)
     }
@@ -463,7 +497,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           description: fault.description,
           assignedTo: assign.technicianId,
           priority: assign.priority,
-          status: 'Assigned',
+          status: 'New',
           notes: '',
           faultReportId: fault.id,
         }
@@ -569,6 +603,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       updateWorkOrderNotes,
       updateWorkOrderCosts,
       deleteWorkOrder,
+      checkInWorkOrder,
+      checkOutWorkOrder,
       techniciansLoading,
       techniciansSaving,
       loadTechnicians,
@@ -616,6 +652,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       updateWorkOrderNotes,
       updateWorkOrderCosts,
       deleteWorkOrder,
+      checkInWorkOrder,
+      checkOutWorkOrder,
       techniciansLoading,
       techniciansSaving,
       loadTechnicians,

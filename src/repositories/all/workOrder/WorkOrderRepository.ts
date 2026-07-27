@@ -46,6 +46,16 @@ class WorkOrderRepository implements WorkOrderRepositoryInterface {
   async delete(dbId: number): Promise<void> {
     await workOrderService.delete(dbId)
   }
+
+  async checkIn(dbId: number): Promise<WorkOrder> {
+    const updated = await workOrderService.checkIn(dbId)
+    return apiWorkOrderToUi(updated)
+  }
+
+  async checkOut(dbId: number): Promise<WorkOrder> {
+    const updated = await workOrderService.checkOut(dbId)
+    return apiWorkOrderToUi(updated)
+  }
 }
 
 export const workOrderRepository = new WorkOrderRepository()

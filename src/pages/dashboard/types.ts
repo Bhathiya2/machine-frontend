@@ -13,13 +13,11 @@ export type ViewName =
 export type MachineStatus = 'Operational' | 'Under Maintenance' | 'Broken' | 'Offline'
 
 export type WorkOrderStatus =
-  | 'Assigned'
-  | 'Technician En Route'
-  | 'Technician Arrived'
-  | 'Work In Progress'
-  | 'Work Completed'
-  | 'Verified & Closed'
-  | 'Cancelled'
+  | 'New'
+  | 'Inprogress'
+  | 'Close'
+  | 'Verified'
+  | 'Finished'
 
 export type UserRole = 'Super Admin' | 'Manager' | 'Technician' | 'Owner' | 'Worker' | 'Finance'
 
@@ -112,6 +110,8 @@ export interface WorkOrder {
   notes: string
   faultReportId?: string
   costEntries: CostEntry[]
+  active_technician_id?: string
+  checked_in_at?: string
 }
 
 export interface Notification {

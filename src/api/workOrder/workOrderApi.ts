@@ -11,6 +11,14 @@ class WorkOrderApi extends BaseApi {
   list<T = WorkOrderApi>(filters: WorkOrderFilters = {}): Promise<AxiosResponse<T[]>> {
     return axiosInstance.get<T[]>(this.resource, { params: filters })
   }
+
+  checkIn<T = WorkOrderApi>(id: number): Promise<AxiosResponse<T>> {
+    return axiosInstance.post<T>(`${this.resource}/${id}/check-in`)
+  }
+
+  checkOut<T = WorkOrderApi>(id: number): Promise<AxiosResponse<T>> {
+    return axiosInstance.post<T>(`${this.resource}/${id}/check-out`)
+  }
 }
 
 export const workOrderApi = new WorkOrderApi()
