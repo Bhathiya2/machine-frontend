@@ -38,11 +38,11 @@ import { priorityColor, woStatusColor, woStatusIcon } from '@/pages/dashboard/ut
 import type { WorkOrderFormData } from './workOrderMapper'
 import {
   canTransitionTo,
+  getNextWorkOrderActionStatus,
   isWoFinal,
   woActionLabel,
   woFlowIndex,
   woFlowLabel,
-  woNextStatus,
 } from './workOrderFlow'
 import type { AppUser, FaultReport, Machine, WorkOrder, WorkOrderStatus } from '@/pages/dashboard/types'
 
@@ -274,7 +274,7 @@ export function WorkOrdersView({
   }
 
   const activeView = viewOrder ? workOrders.find((order) => order.id === viewOrder.id) ?? viewOrder : null
-  const nextStatus = activeView ? woNextStatus(activeView.status) : null
+  const nextStatus = activeView ? getNextWorkOrderActionStatus(activeView.status, currentUser.role) : null
   const canAdvance =
     activeView && nextStatus ? canUpdateWorkOrderStatus(activeView, nextStatus) : false
   const canReopen =

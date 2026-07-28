@@ -16,6 +16,14 @@ export function woNextStatus(current: WorkOrderStatus): WorkOrderStatus | null {
   return WO_FLOW[idx + 1]
 }
 
+export function getNextWorkOrderActionStatus(current: WorkOrderStatus, userRole?: string): WorkOrderStatus | null {
+  if (userRole === 'Technician') {
+    return current === 'New' ? 'Inprogress' : null
+  }
+
+  return woNextStatus(current)
+}
+
 export function woFlowLabel(status: WorkOrderStatus) {
   switch (status) {
     case 'New':

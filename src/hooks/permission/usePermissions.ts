@@ -78,6 +78,7 @@ export function usePermissions() {
       }
 
       if (target === 'Verified') {
+        if (currentUser.role === 'Technician') return false
         return can('workorders.verify_close') || (order.assignedTo === currentUser.id && can('workorders.update_status'))
       }
 
