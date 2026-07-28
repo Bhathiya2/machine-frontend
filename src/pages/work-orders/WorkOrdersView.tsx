@@ -275,6 +275,7 @@ export function WorkOrdersView({
     const updated = await onCheckIn(order.dbId);
     if (updated) {
       setViewOrder(updated);
+      setForm((prev) => ({ ...prev }));
     }
   };
 
@@ -283,6 +284,7 @@ export function WorkOrdersView({
     const updated = await onCheckOut(order.dbId);
     if (updated) {
       setViewOrder(updated);
+      setForm((prev) => ({ ...prev }));
     }
   };
 
