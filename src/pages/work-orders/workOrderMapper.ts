@@ -45,6 +45,8 @@ export function apiWorkOrderToUi(api: WorkOrderApi): WorkOrder {
     notes: api.notes ?? '',
     faultReportId: api.fault_report_id ?? undefined,
     costEntries: mapCostEntries(api.cost_entries),
+    active_technician_id: api.active_technician_id ?? undefined,
+    checked_in_at: api.checked_in_at ?? undefined,
   }
 }
 
