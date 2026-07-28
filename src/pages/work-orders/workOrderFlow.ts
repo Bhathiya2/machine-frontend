@@ -65,5 +65,6 @@ export function canTransitionTo(
 ) {
   if (current === "Close" && target === "Inprogress") return true;
   if (target === "Close" && current === "Inprogress") return true;
-  return woNextStatus(current) === target;
+  if (current === "New" && target === "Inprogress") return true;
+  return false;
 }
