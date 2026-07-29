@@ -87,6 +87,13 @@ export function usePermissions() {
 
       if (!canTransitionTo(order.status, target)) return false;
 
+      // Handle re-opening separately and explicitly
+      if (order.status === 'Close') {
+        if (target === 'New' || target === 'Inprogress') {
+          return isSuperAdmin; // Only super admin can re-open
+        }
+      }
+
       if (isSuperAdmin) return true;
 
       if (target === "Finished" && order.status === "Verified") {
@@ -106,10 +113,7 @@ export function usePermissions() {
         return can("workorders.cancel");
       }
 
-      if (target === "Inprogress" && order.status === "Close") {
-        return can("workorders.update");
-      }
-
+      // This is now for "New" -> "Inprogress"
       if (can("workorders.update")) return true;
       if (!can("workorders.update_status")) return false;
       if (order.assignedTo !== currentUser.id) return false;

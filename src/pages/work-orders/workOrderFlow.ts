@@ -67,8 +67,25 @@ export function canTransitionTo(
   current: WorkOrderStatus,
   target: WorkOrderStatus,
 ) {
-  if (current === "Close" && target === "Inprogress") return true;
-  if (target === "Close" && current === "Inprogress") return true;
-  if (current === "New" && target === "Inprogress") return true;
+  // Re-opening
+  if (current === 'Close' && target === 'New') {
+    return true;
+  }
+  if (current === 'Close' && target === 'Inprogress') {
+    return true;
+  }
+
+  const currentIndex = WO_FLOW.indexOf(current);
+  const targetIndex = WO_FLOW.indexOf(target);
+
+  if (currentIndex === -1 || targetIndex === -1) {
+    return false;
+  }
+
+  // Allow moving forward in the flow
+  if (targetIndex === currentIndex + 1) {
+    return true;
+  }
+
   return false;
 }

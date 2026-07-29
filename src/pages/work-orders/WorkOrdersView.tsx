@@ -341,7 +341,7 @@ export function WorkOrdersView({
       : false;
   const canReopen =
     activeView && activeView.status === "Close"
-      ? canUpdateWorkOrderStatus(activeView, "Inprogress")
+      ? canUpdateWorkOrderStatus(activeView, "New")
       : false;
   const isCheckedIn =
     activeView && activeView.active_technician_id === currentUser.id;
@@ -998,7 +998,7 @@ export function WorkOrdersView({
                   <Button
                     variant="outline"
                     disabled={saving}
-                    onClick={() => jumpStatus(activeView, "Inprogress")}
+                    onClick={() => jumpStatus(activeView, "New")}
                   >
                     <ArrowRight size={15} />
                     Re-Open work order
