@@ -1006,7 +1006,7 @@ export function WorkOrdersView({
                 </div>
               )}
 
-              {isWoFinal(activeView.status) && (
+              {isWoFinal(activeView.status) && activeView.status !== 'Close' && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
                   <ShieldCheck size={15} />
                   This work order is {activeView.status.toLowerCase()}.
