@@ -939,22 +939,26 @@ export function WorkOrdersView({
                   <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
                     Next action
                   </p>
-                  {isCheckedIn ? (
-                    <Button
-                      className="w-full sm:w-auto"
-                      disabled={saving}
-                      onClick={() => checkOut(activeView)}
-                    >
-                      <LogOut size={15} /> Check Out
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full sm:w-auto"
-                      disabled={saving}
-                      onClick={() => checkIn(activeView)}
-                    >
-                      <LogIn size={15} /> Check In
-                    </Button>
+                  {activeView.status === 'Inprogress' && (
+                    <>
+                      {isCheckedIn ? (
+                        <Button
+                          className="w-full sm:w-auto"
+                          disabled={saving}
+                          onClick={() => checkOut(activeView)}
+                        >
+                          <LogOut size={15} /> Check Out
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full sm:w-auto"
+                          disabled={saving}
+                          onClick={() => checkIn(activeView)}
+                        >
+                          <LogIn size={15} /> Check In
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   {canAdvance && nextStatus ? (
@@ -966,6 +970,7 @@ export function WorkOrdersView({
                       {nextStatus === "Inprogress" && <Wrench size={15} />}
                       {nextStatus === "Verified" && <ShieldCheck size={15} />}
                       {nextStatus === "Finished" && <CheckCircle2 size={15} />}
+                      {nextStatus === "Close" && <XCircle size={15} />}
                       {woActionLabel(nextStatus)}
                     </Button>
                   ) : activeView.status === "Verified" ? (
@@ -979,7 +984,7 @@ export function WorkOrdersView({
                     </p>
                   ) : null}
 
-                  {can(PERMISSIONS.WORKORDERS_CANCEL) && (
+                  {/* {can(PERMISSIONS.WORKORDERS_CANCEL) && (
                     <Button
                       size="sm"
                       variant="destructive"
@@ -989,7 +994,7 @@ export function WorkOrdersView({
                       <XCircle size={15} />
                       Close WO
                     </Button>
-                  )}
+                  )} */}
                 </div>
               )}
 
