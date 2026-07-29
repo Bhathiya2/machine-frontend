@@ -3,6 +3,7 @@ import type { IssueCategory, ViewName, WorkOrderStatus } from './types'
 export const WO_FLOW: WorkOrderStatus[] = [
   'New',
   'Inprogress',
+  'Close',
   'Verified',
   'Finished',
 ]
