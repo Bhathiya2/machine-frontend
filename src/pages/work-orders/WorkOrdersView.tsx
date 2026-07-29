@@ -850,12 +850,18 @@ export function WorkOrdersView({
                         const checkOutTime = session.checked_out_at
                           ? new Date(session.checked_out_at)
                           : null;
-                        const durationMs = checkOutTime
-                          ? checkOutTime.getTime() - checkInTime.getTime()
-                          : Date.now() - checkInTime.getTime(); // If not checked out, duration until now
 
-                        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
-                        const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                        let durationLabel = "Calculating...";
+                        if (checkInTime) {
+                          const now = checkOutTime ? checkOutTime.getTime() : Date.now();
+                          const durationMs = Math.max(0, now - checkInTime.getTime());
+
+                          const totalMinutes = Math.floor(durationMs / (1000 * 60));
+                          const hours = Math.floor(totalMinutes / 60);
+                          const minutes = totalMinutes % 60;
+
+                          durationLabel = `${hours}h ${minutes}m`;
+                        }
 
                         return (
                           <TableRow key={session.id}>
@@ -866,12 +872,16 @@ export function WorkOrdersView({
                               {checkInTime.toLocaleString()}
                             </TableCell>
                             <TableCell>
-                              {checkOutTime
-                                ? checkOutTime.toLocaleString()
-                                : "N/A"}
+                              {checkOutTime ? (
+                                checkOutTime.toLocaleString()
+                              ) : (
+                                <Badge className="bg-green-100 text-green-800">
+                                  Still Working
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell>
-                              {`${durationHours}h ${durationMinutes}m`}
+                              {durationLabel}
                             </TableCell>
                           </TableRow>
                         );
