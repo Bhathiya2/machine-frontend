@@ -69,56 +69,40 @@ export function usePermissions() {
       if (!currentUser) return false;
 
       const target = nextStatus as WorkOrderStatus | undefined;
+      if (!target) return false; // No target, no action
 
-      if (!target) {
-        if (isSuperAdmin) return !isWoFinal(order.status);
-        if (can("workorders.update")) return !isWoFinal(order.status);
-        if (can("workorders.verify_close") && order.status === "Verified")
-          return true;
-        if (can("workorders.cancel") && !isWoFinal(order.status)) return true;
-        if (
-          can("workorders.update_status") &&
-          order.assignedTo === currentUser.id
-        ) {
-          return !isWoFinal(order.status);
-        }
-        return false;
+      const current = order.status;
+
+      // Super Admin can do almost anything
+      if (isSuperAdmin) {
+        if (current === 'Close' && (target === 'New' || target === 'Inprogress')) return true;
+        if (isWoFinal(current)) return false; // Cannot advance from final status
+        return true;
       }
 
-      if (!canTransitionTo(order.status, target)) return false;
-
-      // Handle re-opening separately and explicitly
-      if (order.status === 'Close') {
-        if (target === 'New' || target === 'Inprogress') {
-          return isSuperAdmin; // Only super admin can re-open
-        }
+      // Transition: New -> Inprogress
+      if (current === 'New' && target === 'Inprogress') {
+        return can('workorders.update_status') && order.assignedTo === currentUser.id;
       }
 
-      if (isSuperAdmin) return true;
-
-      if (target === "Finished" && order.status === "Verified") {
-        return hasRole("Finance");
+      // Transition: Inprogress -> Close
+      if (current === 'Inprogress' && target === 'Close') {
+        return can('workorders.cancel');
       }
 
-      if (target === "Verified") {
-        if (currentUser.role === "Technician") return false;
-        return (
-          can("workorders.verify_close") ||
-          (order.assignedTo === currentUser.id &&
-            can("workorders.update_status"))
-        );
+      // Transition: Close -> Verified
+      if (current === 'Close' && target === 'Verified') {
+        if (currentUser.role === 'Technician') return false;
+        return can('workorders.verify_close');
       }
 
-      if (target === "Close") {
-        return can("workorders.cancel");
+      // Transition: Verified -> Finished
+      if (current === 'Verified' && target === 'Finished') {
+        return hasRole('Finance');
       }
 
-      // This is now for "New" -> "Inprogress"
-      if (can("workorders.update")) return true;
-      if (!can("workorders.update_status")) return false;
-      if (order.assignedTo !== currentUser.id) return false;
-
-      return true;
+      // Default deny
+      return false;
     },
     [can, hasRole, currentUser, isSuperAdmin],
   );

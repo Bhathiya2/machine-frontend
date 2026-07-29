@@ -24,8 +24,11 @@ export function getNextWorkOrderActionStatus(
     return 'New';
   }
 
+  // Allow technician to move from New to Inprogress, and from Inprogress to Close
   if (userRole === "Technician") {
-    return current === "New" ? "Inprogress" : null;
+    if (current === "New") return "Inprogress";
+    if (current === "Inprogress") return "Close";
+    return null;
   }
 
   return woNextStatus(current);
