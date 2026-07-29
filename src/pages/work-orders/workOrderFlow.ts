@@ -2,7 +2,7 @@ import { WO_FLOW } from "@/pages/dashboard/constants";
 import type { WorkOrderStatus } from "@/pages/dashboard/types";
 
 export function isWoFinal(status: WorkOrderStatus) {
-  return status === "Verified" || status === "Finished";
+  return status === "Verified" || status === "Finished" || status === "Close";
 }
 
 export function woFlowIndex(status: WorkOrderStatus) {
