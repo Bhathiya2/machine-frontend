@@ -20,6 +20,10 @@ export function getNextWorkOrderActionStatus(
   current: WorkOrderStatus,
   userRole?: string,
 ): WorkOrderStatus | null {
+  if (userRole === 'Super Admin' && current === 'Close') {
+    return 'New';
+  }
+
   if (userRole === "Technician") {
     return current === "New" ? "Inprogress" : null;
   }
