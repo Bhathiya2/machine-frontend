@@ -1,5 +1,5 @@
 import type { WorkOrderFilters } from '@/interfaces/all/workOrder'
-import type { WorkOrder, WorkOrderStatus } from '@/pages/dashboard/types'
+import type { WorkOrder, WorkOrderStatus, WorkOrderCheckInSession } from '@/pages/dashboard/types'
 import type { WorkOrderFormData } from '@/pages/work-orders/workOrderMapper'
 
 export interface WorkOrderRepositoryInterface {
@@ -12,4 +12,5 @@ export interface WorkOrderRepositoryInterface {
   delete(dbId: number): Promise<void>
   checkIn(dbId: number): Promise<WorkOrder>
   checkOut(dbId: number): Promise<WorkOrder>
+  getCheckInSessions(workOrderId: number): Promise<WorkOrderCheckInSession[]>;
 }

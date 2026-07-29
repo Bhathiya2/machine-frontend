@@ -2,6 +2,7 @@ import type { AxiosResponse } from 'axios'
 import axiosInstance from '@/libs/axios'
 import { BaseApi } from '@/api/base/baseApi'
 import type { WorkOrderApi, WorkOrderFilters } from '@/interfaces/all/workOrder'
+import type { WorkOrderCheckInSession } from '@/pages/dashboard/types'
 
 class WorkOrderApi extends BaseApi {
   constructor() {
@@ -18,6 +19,10 @@ class WorkOrderApi extends BaseApi {
 
   checkOut<T = WorkOrderApi>(id: number): Promise<AxiosResponse<T>> {
     return axiosInstance.post<T>(`${this.resource}/${id}/check-out`)
+  }
+
+  getCheckInSessions<T = WorkOrderCheckInSession[]>(workOrderId: number): Promise<AxiosResponse<T>> {
+    return axiosInstance.get<T>(`${this.resource}/${workOrderId}/check-in-sessions`);
   }
 }
 

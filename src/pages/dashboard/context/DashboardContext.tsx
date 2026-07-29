@@ -30,6 +30,7 @@ import type {
   ViewName,
   WorkOrder,
   WorkOrderStatus,
+  WorkOrderCheckInSession,
 } from '../types'
 
 interface DashboardContextValue {
@@ -52,6 +53,9 @@ interface DashboardContextValue {
   deleteWorkOrder: (dbId: number) => Promise<boolean>
   checkInWorkOrder: (dbId: number) => Promise<WorkOrder | null>
   checkOutWorkOrder: (dbId: number) => Promise<WorkOrder | null>
+  loadCheckInSessions: (
+    workOrderId: number,
+  ) => Promise<WorkOrderCheckInSession[]>;
   techniciansLoading: boolean
   techniciansSaving: boolean
   loadTechnicians: () => Promise<void>
@@ -366,6 +370,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const loadCheckInSessions = useCallback(async (workOrderId: number) => {
+    try {
+      const sessions = await workOrderRepository.getCheckInSessions(workOrderId);
+      return sessions;
+    } catch (e: any) {
+      const message = e?.response?.data?.message ?? 'Failed to load check-in sessions';
+      toast.error(message);
+      return [];
+    }
+  }, []);
+
   const createMachine = useCallback(async (form: MachineFormData) => {
     setMachinesSaving(true)
     try {
@@ -605,6 +620,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       deleteWorkOrder,
       checkInWorkOrder,
       checkOutWorkOrder,
+      loadCheckInSessions,
       techniciansLoading,
       techniciansSaving,
       loadTechnicians,
@@ -654,6 +670,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       deleteWorkOrder,
       checkInWorkOrder,
       checkOutWorkOrder,
+      loadCheckInSessions,
       techniciansLoading,
       techniciansSaving,
       loadTechnicians,

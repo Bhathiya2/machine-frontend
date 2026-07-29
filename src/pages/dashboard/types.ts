@@ -114,6 +114,17 @@ export interface WorkOrder {
   checked_in_at?: string
 }
 
+export interface WorkOrderCheckInSession {
+  id: number;
+  work_order_id: string;
+  technician_id: string;
+  checked_in_at: string;
+  checked_out_at: string | null;
+  created_at: string;
+  updated_at: string;
+  technician?: AppUser;
+}
+
 export interface Notification {
   id: string
   dbId?: number

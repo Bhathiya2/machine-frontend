@@ -6,6 +6,7 @@ import type {
   WorkOrderApi,
   WorkOrderFilters,
 } from '@/interfaces/all/workOrder'
+import type { WorkOrderCheckInSession } from '@/pages/dashboard/types'
 
 function unwrap<T>(response: { data: T } | T): T {
   if (response && typeof response === 'object' && 'data' in response) {
@@ -33,6 +34,12 @@ class WorkOrderService extends BaseService<WorkOrderApi, CreateWorkOrderDto, Upd
   async checkOut(id: number): Promise<WorkOrderApi> {
     const response = await workOrderApi.checkOut(id)
     return unwrap(response)
+  }
+
+  async getCheckInSessions(workOrderId: number): Promise<WorkOrderCheckInSession[]> {
+    const response = await workOrderApi.getCheckInSessions(workOrderId);
+    const data = unwrap(response);
+    return Array.isArray(data) ? data : [];
   }
 }
 

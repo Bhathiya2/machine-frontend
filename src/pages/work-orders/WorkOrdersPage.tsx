@@ -18,6 +18,7 @@ export default function WorkOrdersPage() {
       onDelete={ctx.deleteWorkOrder}
       onCheckIn={ctx.checkInWorkOrder}
       onCheckOut={ctx.checkOutWorkOrder}
+      onLoadCheckInSessions={ctx.loadCheckInSessions}
       machines={ctx.machines}
       users={ctx.users}
       currentUser={ctx.currentUser}

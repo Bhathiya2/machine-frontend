@@ -63,6 +63,7 @@ import type {
   Machine,
   WorkOrder,
   WorkOrderStatus,
+  WorkOrderCheckInSession,
 } from "@/pages/dashboard/types";
 
 const STATUSES: Array<WorkOrderStatus | "All"> = [
@@ -105,6 +106,9 @@ interface WorkOrdersViewProps {
   onDelete: (dbId: number) => Promise<boolean>;
   onCheckIn: (dbId: number) => Promise<WorkOrder | null>;
   onCheckOut: (dbId: number) => Promise<WorkOrder | null>;
+  onLoadCheckInSessions: (
+    workOrderId: number,
+  ) => Promise<WorkOrderCheckInSession[]>;
   machines: Machine[];
   users: AppUser[];
   currentUser: AppUser;
@@ -125,6 +129,7 @@ export function WorkOrdersView({
   onDelete,
   onCheckIn,
   onCheckOut,
+  onLoadCheckInSessions,
   machines,
   users,
   currentUser,
@@ -141,6 +146,9 @@ export function WorkOrdersView({
   const [deleteTarget, setDeleteTarget] = useState<WorkOrder | null>(null);
   const [notesDraft, setNotesDraft] = useState("");
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [checkInSessions, setCheckInSessions] = useState<
+    WorkOrderCheckInSession[]
+  >([]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<WorkOrderStatus | "All">(
@@ -255,10 +263,16 @@ export function WorkOrdersView({
     }
   };
 
-  const openView = (order: WorkOrder) => {
+  const openView = async (order: WorkOrder) => {
     setViewOrder(order);
     setNotesDraft(order.notes);
     viewModal.open();
+    if (order.dbId && currentUser.role === "Super Admin") {
+      const sessions = await onLoadCheckInSessions(order.dbId);
+      setCheckInSessions(sessions);
+    } else {
+      setCheckInSessions([]);
+    }
   };
 
   const jumpStatus = async (order: WorkOrder, status: WorkOrderStatus) => {
@@ -815,6 +829,57 @@ export function WorkOrdersView({
                   readOnly={!canUpdateWorkOrderNotes(activeView)}
                 />
               </FormField>
+
+              {currentUser.role === "Super Admin" && checkInSessions.length > 0 && (
+                <div className="space-y-3 border-t pt-4">
+                  <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                    Check-in Sessions
+                  </p>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Technician</TableHead>
+                        <TableHead>Check In</TableHead>
+                        <TableHead>Check Out</TableHead>
+                        <TableHead>Duration</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {checkInSessions.map((session) => {
+                        const checkInTime = new Date(session.checked_in_at);
+                        const checkOutTime = session.checked_out_at
+                          ? new Date(session.checked_out_at)
+                          : null;
+                        const durationMs = checkOutTime
+                          ? checkOutTime.getTime() - checkInTime.getTime()
+                          : Date.now() - checkInTime.getTime(); // If not checked out, duration until now
+
+                        const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                        const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                        return (
+                          <TableRow key={session.id}>
+                            <TableCell>
+                              {session.technician?.name ?? session.technician_id}
+                            </TableCell>
+                            <TableCell>
+                              {checkInTime.toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              {checkOutTime
+                                ? checkOutTime.toLocaleString()
+                                : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {`${durationHours}h ${durationMinutes}m`}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
 
               <div className="space-y-3 border-t pt-4">
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">

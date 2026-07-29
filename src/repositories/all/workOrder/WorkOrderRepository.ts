@@ -9,7 +9,7 @@ import {
   statusPatchDto,
   type WorkOrderFormData,
 } from '@/pages/work-orders/workOrderMapper'
-import type { CostEntry, WorkOrder, WorkOrderStatus } from '@/pages/dashboard/types'
+import type { CostEntry, WorkOrder, WorkOrderStatus, WorkOrderCheckInSession } from '@/pages/dashboard/types'
 import type { WorkOrderRepositoryInterface } from './WorkOrderRepositoryInterface'
 
 class WorkOrderRepository implements WorkOrderRepositoryInterface {
@@ -55,6 +55,11 @@ class WorkOrderRepository implements WorkOrderRepositoryInterface {
   async checkOut(dbId: number): Promise<WorkOrder> {
     const updated = await workOrderService.checkOut(dbId)
     return apiWorkOrderToUi(updated)
+  }
+
+  async getCheckInSessions(workOrderId: number): Promise<WorkOrderCheckInSession[]> {
+    const data = await workOrderService.getCheckInSessions(workOrderId);
+    return data;
   }
 }
 
