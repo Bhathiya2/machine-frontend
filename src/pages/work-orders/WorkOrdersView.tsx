@@ -712,11 +712,20 @@ export function WorkOrdersView({
                       })
                     }
                   >
-                    {STATUSES.filter((s) => s !== "All").map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
+                    {STATUSES.filter((s) => s !== "All").map((status) => {
+                      if (
+                        (status === "Verified" || status === "Finished") &&
+                        currentUser.role !== "Super Admin" &&
+                        form.status !== status
+                      ) {
+                        return null;
+                      }
+                      return (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      );
+                    })}
                   </select>
                 </FormField>
               )}
@@ -956,9 +965,10 @@ export function WorkOrdersView({
                   <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
                     Next action
                   </p>
-                  {activeView.status === 'Inprogress' && (
-                    <>
-                      {isCheckedIn ? (
+                  <div className="flex flex-wrap gap-2">
+                    {/* Check In / Check Out for active technician */}
+                    {activeView.status === 'Inprogress' && (
+                      isCheckedIn ? (
                         <Button
                           className="w-full sm:w-auto"
                           disabled={saving}
@@ -974,44 +984,63 @@ export function WorkOrdersView({
                         >
                           <LogIn size={15} /> Check In
                         </Button>
+                      )
+                    )}
+
+                    {/* Start Work (if status is New) */}
+                    {activeView.status === 'New' && (
+                      <Button
+                        className="w-full sm:w-auto"
+                        disabled={saving}
+                        onClick={() => jumpStatus(activeView, 'Inprogress')}
+                      >
+                        <Wrench size={15} /> Start Work
+                      </Button>
+                    )}
+
+                    {/* Close Work (if status is Inprogress) */}
+                    {activeView.status === 'Inprogress' && (
+                      <Button
+                        className="w-full sm:w-auto"
+                        variant="outline"
+                        disabled={saving}
+                        onClick={() => jumpStatus(activeView, 'Close')}
+                      >
+                        <XCircle size={15} /> Close Work
+                      </Button>
+                    )}
+
+                    {/* Verified Button (if status is Inprogress or Close, and user is Super Admin) */}
+                    {(activeView.status === 'Inprogress' || activeView.status === 'Close') &&
+                      currentUser.role === 'Super Admin' && (
+                        <Button
+                          className="w-full sm:w-auto"
+                          disabled={saving}
+                          onClick={() => jumpStatus(activeView, 'Verified')}
+                        >
+                          <ShieldCheck size={15} /> Verified
+                        </Button>
                       )}
-                    </>
-                  )}
 
-                  {canAdvance && nextStatus ? (
-                    <Button
-                      className="w-full sm:w-auto"
-                      disabled={saving}
-                      onClick={() => jumpStatus(activeView, nextStatus)}
-                    >
-                      {nextStatus === "Inprogress" && <Wrench size={15} />}
-                      {nextStatus === "Verified" && <ShieldCheck size={15} />}
-                      {nextStatus === "Finished" && <CheckCircle2 size={15} />}
-                      {nextStatus === "Close" && <XCircle size={15} />}
-                      {woActionLabel(nextStatus)}
-                    </Button>
-                  ) : activeView.status === "Verified" ? (
-                    <p className="text-sm text-muted-foreground">
-                      Work is complete. Waiting for manager or owner to verify
-                      and close.
-                    </p>
-                  ) : canUpdateWorkOrderStatus(activeView) ? (
-                    <p className="text-sm text-muted-foreground">
-                      Only the assigned technician can advance this work order.
-                    </p>
-                  ) : null}
+                    {/* Finished Button (if status is Verified, and user is Super Admin) */}
+                    {activeView.status === 'Verified' && currentUser.role === 'Super Admin' && (
+                      <Button
+                        className="w-full sm:w-auto"
+                        disabled={saving}
+                        onClick={() => jumpStatus(activeView, 'Finished')}
+                      >
+                        <CheckCircle2 size={15} /> Finished
+                      </Button>
+                    )}
+                  </div>
 
-                  {/* {can(PERMISSIONS.WORKORDERS_CANCEL) && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={saving}
-                      onClick={() => jumpStatus(activeView, "Close")}
-                    >
-                      <XCircle size={15} />
-                      Close WO
-                    </Button>
-                  )} */}
+                  {/* Message for non-Super Admin when status is Close or Verified */}
+                  {(activeView.status === 'Close' || activeView.status === 'Verified') &&
+                    currentUser.role !== 'Super Admin' && (
+                      <p className="text-sm text-muted-foreground">
+                        Only Super Admin can mark work orders as Verified or Finished.
+                      </p>
+                    )}
                 </div>
               )}
 

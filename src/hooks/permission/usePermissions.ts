@@ -73,7 +73,12 @@ export function usePermissions() {
 
       const current = order.status;
 
-      // Super Admin can do almost anything
+      // Transition to Verified or Finished is ONLY allowed for Super Admin
+      if (target === "Verified" || target === "Finished") {
+        return isSuperAdmin;
+      }
+
+      // Super Admin can do any other valid transition
       if (isSuperAdmin) {
         if (current === 'Close' && (target === 'New' || target === 'Inprogress')) return true;
         if (isWoFinal(current)) return false; // Cannot advance from final status
@@ -90,21 +95,10 @@ export function usePermissions() {
         return can('workorders.cancel');
       }
 
-      // Transition: Close -> Verified
-      if (current === 'Close' && target === 'Verified') {
-        if (currentUser.role === 'Technician') return false;
-        return can('workorders.verify_close');
-      }
-
-      // Transition: Verified -> Finished
-      if (current === 'Verified' && target === 'Finished') {
-        return hasRole('Finance');
-      }
-
       // Default deny
       return false;
     },
-    [can, hasRole, currentUser, isSuperAdmin],
+    [can, currentUser, isSuperAdmin],
   );
 
   const canUpdateWorkOrderNotes = useCallback(

@@ -2,7 +2,7 @@ import { WO_FLOW } from "@/pages/dashboard/constants";
 import type { WorkOrderStatus } from "@/pages/dashboard/types";
 
 export function isWoFinal(status: WorkOrderStatus) {
-  return status === "Verified" || status === "Finished" || status === "Close";
+  return status === "Finished";
 }
 
 export function woFlowIndex(status: WorkOrderStatus) {
@@ -71,10 +71,7 @@ export function canTransitionTo(
   target: WorkOrderStatus,
 ) {
   // Re-opening
-  if (current === 'Close' && target === 'New') {
-    return true;
-  }
-  if (current === 'Close' && target === 'Inprogress') {
+  if (current === 'Close' && (target === 'New' || target === 'Inprogress')) {
     return true;
   }
 
@@ -86,7 +83,7 @@ export function canTransitionTo(
   }
 
   // Allow moving forward in the flow
-  if (targetIndex === currentIndex + 1) {
+  if (targetIndex > currentIndex) {
     return true;
   }
 
