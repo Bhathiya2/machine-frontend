@@ -3,6 +3,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Eye,
+  History,
   Loader2,
   LogIn,
   LogOut,
@@ -12,6 +13,7 @@ import {
   Search,
   ShieldAlert,
   ShieldCheck,
+  Timer,
   Trash2,
   Wrench,
   X,
@@ -841,69 +843,165 @@ export function WorkOrdersView({
 
               {currentUser.role === "Super Admin" && checkInSessions.length > 0 && (
                 <div className="space-y-3 border-t pt-4">
-                  <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                    Check-in Sessions
-                  </p>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Technician</TableHead>
-                        <TableHead>Check In</TableHead>
-                        <TableHead>Check Out</TableHead>
-                        <TableHead>Duration</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {checkInSessions.map((session) => {
-                        const checkInTime = new Date(session.checked_in_at);
-                        const checkOutTime = session.checked_out_at
-                          ? new Date(session.checked_out_at)
-                          : null;
+                  {/* Header with Title, Session Count and Total Logged Time */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <History size={16} className="text-primary" />
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                        Check-in Sessions Log
+                      </span>
+                      <Badge variant="outline" className="font-mono text-[11px]">
+                        {checkInSessions.length} {checkInSessions.length === 1 ? 'session' : 'sessions'}
+                      </Badge>
+                    </div>
 
-                        let durationLabel = "Calculating...";
-                        if (checkInTime) {
-                          const now = checkOutTime ? checkOutTime.getTime() : Date.now();
-                          const durationMs = Math.max(0, now - checkInTime.getTime());
-
-                          const totalSeconds = Math.floor(durationMs / 1000);
-                          const hours = Math.floor(totalSeconds / 3600);
-                          const minutes = Math.floor((totalSeconds % 3600) / 60);
-                          const seconds = totalSeconds % 60;
-
-                          if (hours > 0) {
-                            durationLabel = `${hours}h ${minutes}m`;
-                          } else if (minutes > 0) {
-                            durationLabel = `${minutes}m ${seconds}s`;
-                          } else {
-                            durationLabel = `${seconds}s`;
-                          }
+                    {/* Calculate Total Accumulated Duration & Active Status */}
+                    {(() => {
+                      let totalMs = 0;
+                      let activeCount = 0;
+                      checkInSessions.forEach((s) => {
+                        const inTime = new Date(s.checked_in_at).getTime();
+                        const outTime = s.checked_out_at ? new Date(s.checked_out_at).getTime() : Date.now();
+                        if (!s.checked_out_at) activeCount++;
+                        if (!isNaN(inTime)) {
+                          totalMs += Math.max(0, outTime - inTime);
                         }
+                      });
+                      const totalSecs = Math.floor(totalMs / 1000);
+                      const hrs = Math.floor(totalSecs / 3600);
+                      const mins = Math.floor((totalSecs % 3600) / 60);
+                      const secs = totalSecs % 60;
+                      const totalStr = hrs > 0 ? `${hrs}h ${mins}m` : mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 
-                        return (
-                          <TableRow key={session.id}>
-                            <TableCell>
-                              {session.technician?.name ?? session.technician_id}
-                            </TableCell>
-                            <TableCell>
-                              {checkInTime.toLocaleString()}
-                            </TableCell>
-                            <TableCell>
-                              {checkOutTime ? (
-                                checkOutTime.toLocaleString()
-                              ) : (
-                                <Badge className="bg-green-100 text-green-800">
-                                  Still Working
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {durationLabel}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                      return (
+                        <div className="flex items-center gap-2">
+                          {activeCount > 0 && (
+                            <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 animate-pulse flex items-center gap-1.5 text-[11px] font-medium">
+                              <span className="size-1.5 rounded-full bg-emerald-500"></span>
+                              Active Session
+                            </Badge>
+                          )}
+                          <div className="flex items-center gap-1.5 rounded-lg border bg-muted/40 px-2.5 py-1 text-xs font-medium">
+                            <Timer size={13} className="text-primary" />
+                            <span className="text-muted-foreground">Total Logged:</span>
+                            <span className="font-mono font-bold text-foreground">{totalStr}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Professional Table Container */}
+                  <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="py-2.5 text-xs font-semibold">Technician</TableHead>
+                          <TableHead className="py-2.5 text-xs font-semibold">Check In</TableHead>
+                          <TableHead className="py-2.5 text-xs font-semibold">Check Out</TableHead>
+                          <TableHead className="py-2.5 text-xs font-semibold text-right">Duration</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {checkInSessions.map((session, idx) => {
+                          const checkInTime = new Date(session.checked_in_at);
+                          const checkOutTime = session.checked_out_at ? new Date(session.checked_out_at) : null;
+                          const techName = session.technician?.name ?? session.technician_id;
+
+                          // Generate initials for avatar
+                          const initials = techName
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2);
+
+                          let durationLabel = "Calculating...";
+                          if (!isNaN(checkInTime.getTime())) {
+                            const now = checkOutTime ? checkOutTime.getTime() : Date.now();
+                            const durationMs = Math.max(0, now - checkInTime.getTime());
+
+                            const totalSeconds = Math.floor(durationMs / 1000);
+                            const hours = Math.floor(totalSeconds / 3600);
+                            const minutes = Math.floor((totalSeconds % 3600) / 60);
+                            const seconds = totalSeconds % 60;
+
+                            if (hours > 0) {
+                              durationLabel = `${hours}h ${minutes}m`;
+                            } else if (minutes > 0) {
+                              durationLabel = `${minutes}m ${seconds}s`;
+                            } else {
+                              durationLabel = `${seconds}s`;
+                            }
+                          }
+
+                          const formatSessionDate = (d: Date) => {
+                            return d.toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: true,
+                            });
+                          };
+
+                          return (
+                            <TableRow key={session.id ?? idx} className="hover:bg-muted/30 transition-colors">
+                              {/* Technician Avatar & Name */}
+                              <TableCell className="py-2.5">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-[11px] font-bold text-white shadow-sm">
+                                    {initials}
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-semibold leading-none">{techName}</p>
+                                    <p className="mt-0.5 text-[10px] text-muted-foreground font-mono">ID: {session.technician_id}</p>
+                                  </div>
+                                </div>
+                              </TableCell>
+
+                              {/* Check In Time */}
+                              <TableCell className="py-2.5 text-xs">
+                                <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
+                                  <LogIn size={13} className="text-emerald-600 shrink-0" />
+                                  <span className="text-foreground">{formatSessionDate(checkInTime)}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Check Out Time */}
+                              <TableCell className="py-2.5 text-xs">
+                                {checkOutTime ? (
+                                  <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
+                                    <LogOut size={13} className="text-amber-600 shrink-0" />
+                                    <span className="text-foreground">{formatSessionDate(checkOutTime)}</span>
+                                  </div>
+                                ) : (
+                                  <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-sans text-[11px] font-medium flex items-center gap-1 w-fit">
+                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                    Still Working
+                                  </Badge>
+                                )}
+                              </TableCell>
+
+                              {/* Duration */}
+                              <TableCell className="py-2.5 text-right">
+                                <span className={`inline-flex items-center gap-1 font-mono text-xs font-semibold px-2 py-0.5 rounded-md ${
+                                  !checkOutTime 
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                    : "bg-muted text-foreground"
+                                }`}>
+                                  <Timer size={12} className="opacity-70" />
+                                  {durationLabel}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               )}
 
