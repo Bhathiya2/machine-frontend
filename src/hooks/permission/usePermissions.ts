@@ -104,6 +104,7 @@ export function usePermissions() {
   const canUpdateWorkOrderNotes = useCallback(
     (order: WorkOrder) => {
       if (!currentUser) return false;
+      if (isWoFinal(order.status)) return false;
       if (isSuperAdmin) return true;
       if (can("workorders.update")) return true;
       return (

@@ -536,14 +536,16 @@ export function WorkOrdersView({
                         </Button>
                         {canManage && (
                           <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8"
-                              onClick={() => openEdit(order)}
-                            >
-                              <Pencil size={15} />
-                            </Button>
+                            {!isWoFinal(order.status) && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                onClick={() => openEdit(order)}
+                              >
+                                <Pencil size={15} />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
