@@ -856,11 +856,18 @@ export function WorkOrdersView({
                           const now = checkOutTime ? checkOutTime.getTime() : Date.now();
                           const durationMs = Math.max(0, now - checkInTime.getTime());
 
-                          const totalMinutes = Math.floor(durationMs / (1000 * 60));
-                          const hours = Math.floor(totalMinutes / 60);
-                          const minutes = totalMinutes % 60;
+                          const totalSeconds = Math.floor(durationMs / 1000);
+                          const hours = Math.floor(totalSeconds / 3600);
+                          const minutes = Math.floor((totalSeconds % 3600) / 60);
+                          const seconds = totalSeconds % 60;
 
-                          durationLabel = `${hours}h ${minutes}m`;
+                          if (hours > 0) {
+                            durationLabel = `${hours}h ${minutes}m`;
+                          } else if (minutes > 0) {
+                            durationLabel = `${minutes}m ${seconds}s`;
+                          } else {
+                            durationLabel = `${seconds}s`;
+                          }
                         }
 
                         return (
