@@ -105,6 +105,10 @@ interface WorkOrdersViewProps {
     status: WorkOrderStatus,
   ) => Promise<WorkOrder | null>;
   onUpdateNotes: (dbId: number, notes: string) => Promise<WorkOrder | null>;
+  onAddTechnicianNotes: (
+    dbId: number,
+    notes: string,
+  ) => Promise<WorkOrder | null>;
   onDelete: (dbId: number) => Promise<boolean>;
   onCheckIn: (dbId: number) => Promise<WorkOrder | null>;
   onCheckOut: (dbId: number) => Promise<WorkOrder | null>;
@@ -128,6 +132,7 @@ export function WorkOrdersView({
   onUpdate,
   onUpdateStatus,
   onUpdateNotes,
+  onAddTechnicianNotes,
   onDelete,
   onCheckIn,
   onCheckOut,
@@ -146,7 +151,7 @@ export function WorkOrdersView({
   const [form, setForm] = useState<WorkOrderFormData>(EMPTY_FORM);
   const [viewOrder, setViewOrder] = useState<WorkOrder | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkOrder | null>(null);
-  const [notesDraft, setNotesDraft] = useState("");
+  const [technicianNotesDraft, setTechnicianNotesDraft] = useState("");
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [checkInSessions, setCheckInSessions] = useState<
     WorkOrderCheckInSession[]
@@ -197,7 +202,7 @@ export function WorkOrdersView({
     const order = workOrders.find((item) => item.id === focusId);
     if (order) {
       setViewOrder(order);
-      setNotesDraft(order.notes);
+      setTechnicianNotesDraft("");
       viewModal.open();
     }
   }, [focusId, workOrders]);
@@ -267,7 +272,7 @@ export function WorkOrdersView({
 
   const openView = async (order: WorkOrder) => {
     setViewOrder(order);
-    setNotesDraft(order.notes);
+    setTechnicianNotesDraft('');
     viewModal.open();
     if (order.dbId && currentUser.role === "Super Admin") {
       const sessions = await onLoadCheckInSessions(order.dbId);
@@ -304,10 +309,13 @@ export function WorkOrdersView({
     }
   };
 
-  const saveNotes = async () => {
+  const saveTechnicianNotes = async () => {
     if (!viewOrder?.dbId) return;
-    const updated = await onUpdateNotes(viewOrder.dbId, notesDraft);
-    if (updated) setViewOrder(updated);
+    const updated = await onAddTechnicianNotes(viewOrder.dbId, technicianNotesDraft);
+    if (updated) {
+      setViewOrder(updated);
+      setTechnicianNotesDraft(''); // Clear the input field
+    }
   };
 
   const confirmDelete = async () => {
@@ -347,6 +355,8 @@ export function WorkOrdersView({
       : false;
   const isCheckedIn =
     activeView && activeView.active_technician_id === currentUser.id;
+  const canEditTechnicianNotes = activeView ? canUpdateWorkOrderNotes(activeView) : false;
+
 
   return (
     <div className="space-y-4">
@@ -836,12 +846,39 @@ export function WorkOrdersView({
                 <textarea
                   className={`${inputCls} resize-none`}
                   rows={3}
-                  value={notesDraft}
-                  onChange={(e) => setNotesDraft(e.target.value)}
-                  onBlur={saveNotes}
-                  readOnly={!canUpdateWorkOrderNotes(activeView)}
+                  value={technicianNotesDraft}
+                  onChange={(e) => setTechnicianNotesDraft(e.target.value)}
+                  readOnly={!canEditTechnicianNotes}
+                  placeholder={canEditTechnicianNotes ? "Add a new note..." : "No notes have been added."}
                 />
+                {canEditTechnicianNotes && (
+                  <Button
+                    className="mt-2"
+                    size="sm"
+                    onClick={saveTechnicianNotes}
+                    disabled={!technicianNotesDraft.trim() || saving}
+                  >
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                    Save Note
+                  </Button>
+                )}
               </FormField>
+
+              {activeView.technician_notes.length > 0 && (
+                <div className="space-y-3 rounded-lg border p-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes History</h3>
+                  <ul className="space-y-3">
+                    {activeView.technician_notes.map((note) => (
+                      <li key={note.id} className="text-sm">
+                        <p className="whitespace-pre-wrap">{note.note}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          by <strong>{note.user?.name ?? 'Unknown User'}</strong> on {note.created_at}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {currentUser.role === "Super Admin" && checkInSessions.length > 0 && (
                 <div className="space-y-3 border-t pt-4">

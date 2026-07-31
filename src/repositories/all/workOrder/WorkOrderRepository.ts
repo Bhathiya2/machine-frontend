@@ -38,6 +38,11 @@ class WorkOrderRepository implements WorkOrderRepositoryInterface {
     return apiWorkOrderToUi(updated)
   }
 
+  async addTechnicianNotes(dbId: number, notes: string): Promise<WorkOrder> {
+    const updated = await workOrderService.addTechnicianNotes(dbId, notes)
+    return apiWorkOrderToUi(updated)
+  }
+
   async updateCostEntries(dbId: number, entries: CostEntry[]): Promise<WorkOrder> {
     const updated = await workOrderService.update(dbId, costEntriesPatchDto(entries))
     return apiWorkOrderToUi(updated)

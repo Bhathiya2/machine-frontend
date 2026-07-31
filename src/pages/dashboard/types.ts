@@ -95,6 +95,13 @@ export interface Machine {
   sign_date?: string
 }
 
+export interface TechnicianNote {
+  id: number;
+  note: string;
+  created_at: string;
+  user?: AppUser;
+}
+
 export interface WorkOrder {
   id: string
   dbId?: number
@@ -108,6 +115,7 @@ export interface WorkOrder {
   updatedAt: string
   priority: 'Low' | 'Medium' | 'High'
   notes: string
+  technician_notes: TechnicianNote[]
   faultReportId?: string
   costEntries: CostEntry[]
   active_technician_id?: string

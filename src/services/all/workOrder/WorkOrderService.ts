@@ -36,6 +36,11 @@ class WorkOrderService extends BaseService<WorkOrderApi, CreateWorkOrderDto, Upd
     return unwrap(response)
   }
 
+  async addTechnicianNotes(id: number, notes: string): Promise<WorkOrderApi> {
+    const response = await workOrderApi.addTechnicianNotes(id, notes)
+    return unwrap(response)
+  }
+
   async getCheckInSessions(workOrderId: number): Promise<WorkOrderCheckInSession[]> {
     const response = await workOrderApi.getCheckInSessions(workOrderId);
     const data = unwrap(response);

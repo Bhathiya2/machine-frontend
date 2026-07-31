@@ -21,6 +21,10 @@ class WorkOrderApi extends BaseApi {
     return axiosInstance.post<T>(`${this.resource}/${id}/check-out`)
   }
 
+  addTechnicianNotes<T = WorkOrderApi>(id: number, notes: string): Promise<AxiosResponse<T>> {
+    return axiosInstance.post<T>(`${this.resource}/${id}/notes`, { notes })
+  }
+
   getCheckInSessions<T = WorkOrderCheckInSession[]>(workOrderId: number): Promise<AxiosResponse<T>> {
     return axiosInstance.get<T>(`${this.resource}/${workOrderId}/check-in-sessions`);
   }

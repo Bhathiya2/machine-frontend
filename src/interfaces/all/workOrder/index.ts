@@ -11,6 +11,15 @@ export interface ApiCostEntry {
   date: string
 }
 
+import type { ApiUser } from '../user';
+
+export interface TechnicianNote {
+  id: number;
+  note: string;
+  created_at: string;
+  user?: ApiUser;
+}
+
 export interface WorkOrderApi extends Timestamps {
   id: EntityId
   work_order_number: string
@@ -22,6 +31,7 @@ export interface WorkOrderApi extends Timestamps {
   status: string
   priority: string
   notes: string | null
+  technician_notes?: TechnicianNote[]
   fault_report_id: string | null
   cost_entries: ApiCostEntry[] | null
   machine?: Machine

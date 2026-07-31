@@ -49,6 +49,7 @@ interface DashboardContextValue {
   updateWorkOrder: (dbId: number, form: WorkOrderFormData) => Promise<WorkOrder | null>
   updateWorkOrderStatus: (dbId: number, status: WorkOrderStatus) => Promise<WorkOrder | null>
   updateWorkOrderNotes: (dbId: number, notes: string) => Promise<WorkOrder | null>
+  addTechnicianNotes: (dbId: number, notes: string) => Promise<WorkOrder | null>
   updateWorkOrderCosts: (dbId: number, entries: CostEntry[]) => Promise<WorkOrder | null>
   deleteWorkOrder: (dbId: number) => Promise<boolean>
   checkInWorkOrder: (dbId: number) => Promise<WorkOrder | null>
@@ -310,6 +311,21 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       return null
     }
   }, [])
+
+  const addTechnicianNotes = useCallback(async (dbId: number, notes: string) => {
+    setWorkOrdersSaving(true);
+    try {
+      const order = await workOrderRepository.addTechnicianNotes(dbId, notes);
+      setWorkOrders((prev) => prev.map((item) => (item.dbId === dbId ? order : item)));
+      toast.success('Technician notes saved');
+      return order;
+    } catch {
+      toast.error('Failed to save technician notes');
+      return null;
+    } finally {
+      setWorkOrdersSaving(false);
+    }
+  }, []);
 
   const updateWorkOrderCosts = useCallback(async (dbId: number, entries: CostEntry[]) => {
     try {
@@ -616,6 +632,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       updateWorkOrder,
       updateWorkOrderStatus,
       updateWorkOrderNotes,
+      addTechnicianNotes,
       updateWorkOrderCosts,
       deleteWorkOrder,
       checkInWorkOrder,
@@ -666,6 +683,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       updateWorkOrder,
       updateWorkOrderStatus,
       updateWorkOrderNotes,
+      addTechnicianNotes,
       updateWorkOrderCosts,
       deleteWorkOrder,
       checkInWorkOrder,
