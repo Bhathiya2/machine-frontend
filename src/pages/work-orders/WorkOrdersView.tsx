@@ -309,7 +309,7 @@ export function WorkOrdersView({
 
   const openView = async (order: WorkOrder) => {
     setViewOrder(order);
-    setTechnicianNotesDraft('');
+    setTechnicianNotesDraft("");
     viewModal.open();
     if (order.dbId && currentUser.role === "Super Admin") {
       const sessions = await onLoadCheckInSessions(order.dbId);
@@ -348,10 +348,13 @@ export function WorkOrdersView({
 
   const saveTechnicianNotes = async () => {
     if (!viewOrder?.dbId) return;
-    const updated = await onAddTechnicianNotes(viewOrder.dbId, technicianNotesDraft);
+    const updated = await onAddTechnicianNotes(
+      viewOrder.dbId,
+      technicianNotesDraft,
+    );
     if (updated) {
       setViewOrder(updated);
-      setTechnicianNotesDraft(''); // Clear the input field
+      setTechnicianNotesDraft(""); // Clear the input field
     }
   };
 
@@ -392,8 +395,9 @@ export function WorkOrdersView({
       : false;
   const isCheckedIn =
     activeView && activeView.active_technician_id === currentUser.id;
-  const canEditTechnicianNotes = activeView ? canUpdateWorkOrderNotes(activeView) : false;
-
+  const canEditTechnicianNotes = activeView
+    ? canUpdateWorkOrderNotes(activeView)
+    : false;
 
   return (
     <div className="space-y-4">
@@ -833,7 +837,7 @@ export function WorkOrdersView({
                   onClick={() => setShowActivityLog((current) => !current)}
                 >
                   <History size={14} />
-                  {showActivityLog ? 'Hide Activity Log' : 'Activity Log'}
+                  {showActivityLog ? "Hide Activity Log" : "Activity Log"}
                 </Button>
                 <button type="button" onClick={viewModal.close}>
                   <X size={20} />
@@ -898,7 +902,11 @@ export function WorkOrdersView({
                   value={technicianNotesDraft}
                   onChange={(e) => setTechnicianNotesDraft(e.target.value)}
                   readOnly={!canEditTechnicianNotes}
-                  placeholder={canEditTechnicianNotes ? "Add a new note..." : "No notes have been added."}
+                  placeholder={
+                    canEditTechnicianNotes
+                      ? "Add a new note..."
+                      : "No notes have been added."
+                  }
                 />
                 {canEditTechnicianNotes && (
                   <Button
@@ -907,7 +915,9 @@ export function WorkOrdersView({
                     onClick={saveTechnicianNotes}
                     disabled={!technicianNotesDraft.trim() || saving}
                   >
-                    {saving ? <Loader2 className="size-4 animate-spin" /> : null}
+                    {saving ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : null}
                     Save Note
                   </Button>
                 )}
@@ -915,13 +925,17 @@ export function WorkOrdersView({
 
               {activeView.technician_notes.length > 0 && (
                 <div className="space-y-3 rounded-lg border p-3">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes History</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Notes History
+                  </h3>
                   <ul className="space-y-3">
                     {activeView.technician_notes.map((note) => (
                       <li key={note.id} className="text-sm">
                         <p className="whitespace-pre-wrap">{note.note}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          by <strong>{note.user?.name ?? 'Unknown User'}</strong> on {note.created_at}
+                          by{" "}
+                          <strong>{note.user?.name ?? "Unknown User"}</strong>{" "}
+                          on {note.created_at}
                         </p>
                       </li>
                     ))}
@@ -929,255 +943,386 @@ export function WorkOrdersView({
                 </div>
               )}
 
-              {showActivityLog && activeView.activities && activeView.activities.length > 0 && (() => {
-                const visibleActivities = activeView.activities.filter(
-                  (activity) => !['checked_in', 'checked_out'].includes(activity.action),
-                );
+              {showActivityLog &&
+                activeView.activities &&
+                activeView.activities.length > 0 &&
+                (() => {
+                  const visibleActivities = activeView.activities.filter(
+                    (activity) =>
+                      !["checked_in", "checked_out"].includes(activity.action),
+                  );
 
-                if (visibleActivities.length === 0) return null;
+                  if (visibleActivities.length === 0) return null;
 
-                return (
-                <div className="space-y-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <History size={16} />
-                      </span>
-                      <div>
-                        <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Work Order Activity Log</h3>
-                        <p className="text-[11px] text-muted-foreground">Recent edit trail and operational events</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-primary/10 text-primary font-mono text-[11px]">
-                      {visibleActivities.length} {visibleActivities.length === 1 ? 'entry' : 'entries'}
-                    </Badge>
-                  </div>
-                  <ul className="space-y-3">
-                    {visibleActivities.map((activity) => (
-                      <li key={activity.id} className="rounded-xl border border-border/60 bg-muted/15 p-4 text-sm shadow-sm transition-colors hover:border-primary/25 hover:bg-muted/20">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-foreground">{activity.summary}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              by <strong className="text-foreground/80">{activity.user?.name ?? activity.user_id}</strong> on {activity.created_at}
+                  return (
+                    <div className="space-y-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <History size={16} />
+                          </span>
+                          <div>
+                            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                              Work Order Activity Log
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground">
+                              Recent edit trail and operational events
                             </p>
                           </div>
-                          <span className="rounded-full border border-primary/15 bg-primary/10 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-primary">
-                            {activityActionLabel(activity.action)}
-                          </span>
                         </div>
+                        <Badge className="bg-primary/10 text-primary font-mono text-[11px]">
+                          {visibleActivities.length}{" "}
+                          {visibleActivities.length === 1 ? "entry" : "entries"}
+                        </Badge>
+                      </div>
+                      <ul className="space-y-3">
+                        {visibleActivities.map((activity) => (
+                          <li
+                            key={activity.id}
+                            className="rounded-xl border border-border/60 bg-muted/15 p-4 text-sm shadow-sm transition-colors hover:border-primary/25 hover:bg-muted/20"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-foreground">
+                                  {activity.summary}
+                                </p>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  by{" "}
+                                  <strong className="text-foreground/80">
+                                    {activity.user?.name ?? activity.user_id}
+                                  </strong>{" "}
+                                  on {activity.created_at}
+                                </p>
+                              </div>
+                              <span className="rounded-full border border-primary/15 bg-primary/10 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-primary">
+                                {activityActionLabel(activity.action)}
+                              </span>
+                            </div>
 
-                        {activity.changes && Object.keys(activity.changes).length > 0 && (
-                          <div className="mt-3 rounded-lg border border-border/70 bg-card p-3">
-                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Changed fields</p>
-                            <div className="space-y-2">
-                              {Object.entries(activity.changes).map(([field, value]) => {
-                                if (value && typeof value === 'object' && !Array.isArray(value) && ('from' in value || 'to' in value)) {
-                                  const nextValue = value as { from?: unknown; to?: unknown };
-                                  return (
-                                    <div key={field} className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                                      <span className="text-xs font-medium text-foreground">{activityFieldLabel(field)}</span>
-                                      <span className="text-[11px] text-muted-foreground">
-                                        <span className="rounded bg-background px-1.5 py-0.5 font-mono text-foreground">{formatActivityValue(nextValue.from)}</span>
-                                        <span className="px-2 text-muted-foreground">→</span>
-                                        <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-primary">{formatActivityValue(nextValue.to)}</span>
-                                      </span>
-                                    </div>
-                                  );
-                                }
+                            {activity.changes &&
+                              Object.keys(activity.changes).length > 0 && (
+                                <div className="mt-3 rounded-lg border border-border/70 bg-card p-3">
+                                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                    Changed fields
+                                  </p>
+                                  <div className="space-y-2">
+                                    {Object.entries(activity.changes).map(
+                                      ([field, value]) => {
+                                        if (
+                                          value &&
+                                          typeof value === "object" &&
+                                          !Array.isArray(value) &&
+                                          ("from" in value || "to" in value)
+                                        ) {
+                                          const nextValue = value as {
+                                            from?: unknown;
+                                            to?: unknown;
+                                          };
+                                          return (
+                                            <div
+                                              key={field}
+                                              className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                                            >
+                                              <span className="text-xs font-medium text-foreground">
+                                                {activityFieldLabel(field)}
+                                              </span>
+                                              <span className="text-[11px] text-muted-foreground">
+                                                <span className="rounded bg-background px-1.5 py-0.5 font-mono text-foreground">
+                                                  {formatActivityValue(
+                                                    nextValue.from,
+                                                  )}
+                                                </span>
+                                                <span className="px-2 text-muted-foreground">
+                                                  →
+                                                </span>
+                                                <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-primary">
+                                                  {formatActivityValue(
+                                                    nextValue.to,
+                                                  )}
+                                                </span>
+                                              </span>
+                                            </div>
+                                          );
+                                        }
 
-                                if (field === 'cost_entries' && value && typeof value === 'object' && !Array.isArray(value)) {
-                                  const stats = value as { from_count?: unknown; to_count?: unknown; to_total?: unknown };
-                                  return (
-                                    <div key={field} className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                                      <span className="text-xs font-medium text-foreground">{activityFieldLabel(field)}</span>
-                                      <span className="text-[11px] text-muted-foreground">
-                                        {formatActivityValue(stats.from_count)} entries → {formatActivityValue(stats.to_count)} entries, total {formatActivityValue(stats.to_total)}
-                                      </span>
-                                    </div>
-                                  );
-                                }
+                                        if (
+                                          field === "cost_entries" &&
+                                          value &&
+                                          typeof value === "object" &&
+                                          !Array.isArray(value)
+                                        ) {
+                                          const stats = value as {
+                                            from_count?: unknown;
+                                            to_count?: unknown;
+                                            to_total?: unknown;
+                                          };
+                                          return (
+                                            <div
+                                              key={field}
+                                              className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                                            >
+                                              <span className="text-xs font-medium text-foreground">
+                                                {activityFieldLabel(field)}
+                                              </span>
+                                              <span className="text-[11px] text-muted-foreground">
+                                                {formatActivityValue(
+                                                  stats.from_count,
+                                                )}{" "}
+                                                entries →{" "}
+                                                {formatActivityValue(
+                                                  stats.to_count,
+                                                )}{" "}
+                                                entries, total{" "}
+                                                {formatActivityValue(
+                                                  stats.to_total,
+                                                )}
+                                              </span>
+                                            </div>
+                                          );
+                                        }
 
-                                return (
-                                  <div key={field} className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <span className="text-xs font-medium text-foreground">{activityFieldLabel(field)}</span>
-                                    <span className="text-[11px] text-muted-foreground">{formatActivityValue(value)}</span>
+                                        return (
+                                          <div
+                                            key={field}
+                                            className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between"
+                                          >
+                                            <span className="text-xs font-medium text-foreground">
+                                              {activityFieldLabel(field)}
+                                            </span>
+                                            <span className="text-[11px] text-muted-foreground">
+                                              {formatActivityValue(value)}
+                                            </span>
+                                          </div>
+                                        );
+                                      },
+                                    )}
                                   </div>
-                                );
-                              })}
+                                </div>
+                              )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
+              {currentUser.role === "Super Admin" &&
+                checkInSessions.length > 0 && (
+                  <div className="space-y-3 border-t pt-4">
+                    {/* Header with Title, Session Count and Total Logged Time */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <History size={16} className="text-primary" />
+                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                          Check-in Sessions Log
+                        </span>
+                        <Badge className="font-mono text-[11px]">
+                          {checkInSessions.length}{" "}
+                          {checkInSessions.length === 1
+                            ? "session"
+                            : "sessions"}
+                        </Badge>
+                      </div>
+
+                      {/* Calculate Total Accumulated Duration & Active Status */}
+                      {(() => {
+                        let totalMs = 0;
+                        let activeCount = 0;
+                        checkInSessions.forEach((s) => {
+                          const inTime = new Date(s.checked_in_at).getTime();
+                          const outTime = s.checked_out_at
+                            ? new Date(s.checked_out_at).getTime()
+                            : Date.now();
+                          if (!s.checked_out_at) activeCount++;
+                          if (!isNaN(inTime)) {
+                            totalMs += Math.max(0, outTime - inTime);
+                          }
+                        });
+                        const totalSecs = Math.floor(totalMs / 1000);
+                        const hrs = Math.floor(totalSecs / 3600);
+                        const mins = Math.floor((totalSecs % 3600) / 60);
+                        const secs = totalSecs % 60;
+                        const totalStr =
+                          hrs > 0
+                            ? `${hrs}h ${mins}m`
+                            : mins > 0
+                              ? `${mins}m ${secs}s`
+                              : `${secs}s`;
+
+                        return (
+                          <div className="flex items-center gap-2">
+                            {activeCount > 0 && (
+                              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 animate-pulse flex items-center gap-1.5 text-[11px] font-medium">
+                                <span className="size-1.5 rounded-full bg-emerald-500"></span>
+                                Active Session
+                              </Badge>
+                            )}
+                            <div className="flex items-center gap-1.5 rounded-lg border bg-muted/40 px-2.5 py-1 text-xs font-medium">
+                              <Timer size={13} className="text-primary" />
+                              <span className="text-muted-foreground">
+                                Total Logged:
+                              </span>
+                              <span className="font-mono font-bold text-foreground">
+                                {totalStr}
+                              </span>
                             </div>
                           </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                );
-              })()}
-
-              {currentUser.role === "Super Admin" && checkInSessions.length > 0 && (
-                <div className="space-y-3 border-t pt-4">
-                  {/* Header with Title, Session Count and Total Logged Time */}
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <History size={16} className="text-primary" />
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
-                        Check-in Sessions Log
-                      </span>
-                      <Badge className="font-mono text-[11px]">
-                        {checkInSessions.length} {checkInSessions.length === 1 ? 'session' : 'sessions'}
-                      </Badge>
+                        );
+                      })()}
                     </div>
 
-                    {/* Calculate Total Accumulated Duration & Active Status */}
-                    {(() => {
-                      let totalMs = 0;
-                      let activeCount = 0;
-                      checkInSessions.forEach((s) => {
-                        const inTime = new Date(s.checked_in_at).getTime();
-                        const outTime = s.checked_out_at ? new Date(s.checked_out_at).getTime() : Date.now();
-                        if (!s.checked_out_at) activeCount++;
-                        if (!isNaN(inTime)) {
-                          totalMs += Math.max(0, outTime - inTime);
-                        }
-                      });
-                      const totalSecs = Math.floor(totalMs / 1000);
-                      const hrs = Math.floor(totalSecs / 3600);
-                      const mins = Math.floor((totalSecs % 3600) / 60);
-                      const secs = totalSecs % 60;
-                      const totalStr = hrs > 0 ? `${hrs}h ${mins}m` : mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                    {/* Professional Table Container */}
+                    <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+                      <Table>
+                        <TableHeader className="bg-muted/50">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="py-2.5 text-xs font-semibold">
+                              Technician
+                            </TableHead>
+                            <TableHead className="py-2.5 text-xs font-semibold">
+                              Check In
+                            </TableHead>
+                            <TableHead className="py-2.5 text-xs font-semibold">
+                              Check Out
+                            </TableHead>
+                            <TableHead className="py-2.5 text-xs font-semibold text-right">
+                              Duration
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {checkInSessions.map((session, idx) => {
+                            const checkInTime = new Date(session.checked_in_at);
+                            const checkOutTime = session.checked_out_at
+                              ? new Date(session.checked_out_at)
+                              : null;
+                            const techName =
+                              session.technician?.name ?? session.technician_id;
 
-                      return (
-                        <div className="flex items-center gap-2">
-                          {activeCount > 0 && (
-                            <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 animate-pulse flex items-center gap-1.5 text-[11px] font-medium">
-                              <span className="size-1.5 rounded-full bg-emerald-500"></span>
-                              Active Session
-                            </Badge>
-                          )}
-                          <div className="flex items-center gap-1.5 rounded-lg border bg-muted/40 px-2.5 py-1 text-xs font-medium">
-                            <Timer size={13} className="text-primary" />
-                            <span className="text-muted-foreground">Total Logged:</span>
-                            <span className="font-mono font-bold text-foreground">{totalStr}</span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
+                            // Generate initials for avatar
+                            const initials = techName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .toUpperCase()
+                              .slice(0, 2);
 
-                  {/* Professional Table Container */}
-                  <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
-                    <Table>
-                      <TableHeader className="bg-muted/50">
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="py-2.5 text-xs font-semibold">Technician</TableHead>
-                          <TableHead className="py-2.5 text-xs font-semibold">Check In</TableHead>
-                          <TableHead className="py-2.5 text-xs font-semibold">Check Out</TableHead>
-                          <TableHead className="py-2.5 text-xs font-semibold text-right">Duration</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {checkInSessions.map((session, idx) => {
-                          const checkInTime = new Date(session.checked_in_at);
-                          const checkOutTime = session.checked_out_at ? new Date(session.checked_out_at) : null;
-                          const techName = session.technician?.name ?? session.technician_id;
+                            let durationLabel = "Calculating...";
+                            if (!isNaN(checkInTime.getTime())) {
+                              const now = checkOutTime
+                                ? checkOutTime.getTime()
+                                : Date.now();
+                              const durationMs = Math.max(
+                                0,
+                                now - checkInTime.getTime(),
+                              );
 
-                          // Generate initials for avatar
-                          const initials = techName
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .toUpperCase()
-                            .slice(0, 2);
+                              const totalSeconds = Math.floor(
+                                durationMs / 1000,
+                              );
+                              const hours = Math.floor(totalSeconds / 3600);
+                              const minutes = Math.floor(
+                                (totalSeconds % 3600) / 60,
+                              );
+                              const seconds = totalSeconds % 60;
 
-                          let durationLabel = "Calculating...";
-                          if (!isNaN(checkInTime.getTime())) {
-                            const now = checkOutTime ? checkOutTime.getTime() : Date.now();
-                            const durationMs = Math.max(0, now - checkInTime.getTime());
-
-                            const totalSeconds = Math.floor(durationMs / 1000);
-                            const hours = Math.floor(totalSeconds / 3600);
-                            const minutes = Math.floor((totalSeconds % 3600) / 60);
-                            const seconds = totalSeconds % 60;
-
-                            if (hours > 0) {
-                              durationLabel = `${hours}h ${minutes}m`;
-                            } else if (minutes > 0) {
-                              durationLabel = `${minutes}m ${seconds}s`;
-                            } else {
-                              durationLabel = `${seconds}s`;
+                              if (hours > 0) {
+                                durationLabel = `${hours}h ${minutes}m`;
+                              } else if (minutes > 0) {
+                                durationLabel = `${minutes}m ${seconds}s`;
+                              } else {
+                                durationLabel = `${seconds}s`;
+                              }
                             }
-                          }
 
-                          const formatSessionDate = (d: Date) => {
-                            return d.toLocaleString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                              second: "2-digit",
-                              hour12: true,
-                            });
-                          };
+                            const formatSessionDate = (d: Date) => {
+                              return d.toLocaleString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                              });
+                            };
 
-                          return (
-                            <TableRow key={session.id ?? idx} className="hover:bg-muted/30 transition-colors">
-                              {/* Technician Avatar & Name */}
-                              <TableCell className="py-2.5">
-                                <div className="flex items-center gap-2.5">
-                                  <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-[11px] font-bold text-white shadow-sm">
-                                    {initials}
+                            return (
+                              <TableRow
+                                key={session.id ?? idx}
+                                className="hover:bg-muted/30 transition-colors"
+                              >
+                                {/* Technician Avatar & Name */}
+                                <TableCell className="py-2.5">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-[11px] font-bold text-white shadow-sm">
+                                      {initials}
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-semibold leading-none">
+                                        {techName}
+                                      </p>
+                                      <p className="mt-0.5 text-[10px] text-muted-foreground font-mono">
+                                        ID: {session.technician_id}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <p className="text-xs font-semibold leading-none">{techName}</p>
-                                    <p className="mt-0.5 text-[10px] text-muted-foreground font-mono">ID: {session.technician_id}</p>
-                                  </div>
-                                </div>
-                              </TableCell>
+                                </TableCell>
 
-                              {/* Check In Time */}
-                              <TableCell className="py-2.5 text-xs">
-                                <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
-                                  <LogIn size={13} className="text-emerald-600 shrink-0" />
-                                  <span className="text-foreground">{formatSessionDate(checkInTime)}</span>
-                                </div>
-                              </TableCell>
-
-                              {/* Check Out Time */}
-                              <TableCell className="py-2.5 text-xs">
-                                {checkOutTime ? (
+                                {/* Check In Time */}
+                                <TableCell className="py-2.5 text-xs">
                                   <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
-                                    <LogOut size={13} className="text-amber-600 shrink-0" />
-                                    <span className="text-foreground">{formatSessionDate(checkOutTime)}</span>
+                                    <LogIn
+                                      size={13}
+                                      className="text-emerald-600 shrink-0"
+                                    />
+                                    <span className="text-foreground">
+                                      {formatSessionDate(checkInTime)}
+                                    </span>
                                   </div>
-                                ) : (
-                                  <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-sans text-[11px] font-medium flex items-center gap-1 w-fit">
-                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-                                    Still Working
-                                  </Badge>
-                                )}
-                              </TableCell>
+                                </TableCell>
 
-                              {/* Duration */}
-                              <TableCell className="py-2.5 text-right">
-                                <span className={`inline-flex items-center gap-1 font-mono text-xs font-semibold px-2 py-0.5 rounded-md ${
-                                  !checkOutTime 
-                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                                    : "bg-muted text-foreground"
-                                }`}>
-                                  <Timer size={12} className="opacity-70" />
-                                  {durationLabel}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                                {/* Check Out Time */}
+                                <TableCell className="py-2.5 text-xs">
+                                  {checkOutTime ? (
+                                    <div className="flex items-center gap-1.5 font-mono text-muted-foreground">
+                                      <LogOut
+                                        size={13}
+                                        className="text-amber-600 shrink-0"
+                                      />
+                                      <span className="text-foreground">
+                                        {formatSessionDate(checkOutTime)}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-sans text-[11px] font-medium flex items-center gap-1 w-fit">
+                                      <span className="size-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                      Still Working
+                                    </Badge>
+                                  )}
+                                </TableCell>
+
+                                {/* Duration */}
+                                <TableCell className="py-2.5 text-right">
+                                  <span
+                                    className={`inline-flex items-center gap-1 font-mono text-xs font-semibold px-2 py-0.5 rounded-md ${
+                                      !checkOutTime
+                                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                        : "bg-muted text-foreground"
+                                    }`}
+                                  >
+                                    <Timer size={12} className="opacity-70" />
+                                    {durationLabel}
+                                  </span>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div className="space-y-3 border-t pt-4">
                 <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
@@ -1239,8 +1384,8 @@ export function WorkOrdersView({
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {/* Check In / Check Out for active technician */}
-                    {activeView.status === 'Inprogress' && (
-                      isCheckedIn ? (
+                    {activeView.status === "Inprogress" &&
+                      (isCheckedIn ? (
                         <Button
                           className="w-full sm:w-auto"
                           disabled={saving}
@@ -1256,61 +1401,64 @@ export function WorkOrdersView({
                         >
                           <LogIn size={15} /> Check In
                         </Button>
-                      )
-                    )}
+                      ))}
 
                     {/* Start Work (if status is New) */}
-                    {activeView.status === 'New' && (
+                    {activeView.status === "New" && (
                       <Button
                         className="w-full sm:w-auto"
                         disabled={saving}
-                        onClick={() => jumpStatus(activeView, 'Inprogress')}
+                        onClick={() => jumpStatus(activeView, "Inprogress")}
                       >
                         <Wrench size={15} /> Start Work
                       </Button>
                     )}
 
                     {/* Close Work (if status is Inprogress) */}
-                    {activeView.status === 'Inprogress' && (
+                    {activeView.status === "Inprogress" && (
                       <Button
                         className="w-full sm:w-auto"
                         variant="outline"
                         disabled={saving}
-                        onClick={() => jumpStatus(activeView, 'Close')}
+                        onClick={() => jumpStatus(activeView, "Close")}
                       >
                         <XCircle size={15} /> Close Work
                       </Button>
                     )}
 
                     {/* Verified Button (if status is Inprogress or Close, and user is Super Admin) */}
-                    {(activeView.status === 'Inprogress' || activeView.status === 'Close') &&
-                      currentUser.role === 'Super Admin' && (
+                    {(activeView.status === "Inprogress" ||
+                      activeView.status === "Close") &&
+                      currentUser.role === "Super Admin" && (
                         <Button
                           className="w-full sm:w-auto"
                           disabled={saving}
-                          onClick={() => jumpStatus(activeView, 'Verified')}
+                          onClick={() => jumpStatus(activeView, "Verified")}
                         >
                           <ShieldCheck size={15} /> Verified
                         </Button>
                       )}
 
                     {/* Finished Button (if status is Verified, and user is Super Admin) */}
-                    {activeView.status === 'Verified' && currentUser.role === 'Super Admin' && (
-                      <Button
-                        className="w-full sm:w-auto"
-                        disabled={saving}
-                        onClick={() => jumpStatus(activeView, 'Finished')}
-                      >
-                        <CheckCircle2 size={15} /> Finished
-                      </Button>
-                    )}
+                    {activeView.status === "Verified" &&
+                      currentUser.role === "Super Admin" && (
+                        <Button
+                          className="w-full sm:w-auto"
+                          disabled={saving}
+                          onClick={() => jumpStatus(activeView, "Finished")}
+                        >
+                          <CheckCircle2 size={15} /> Finished
+                        </Button>
+                      )}
                   </div>
 
                   {/* Message for non-Super Admin when status is Close or Verified */}
-                  {(activeView.status === 'Close' || activeView.status === 'Verified') &&
-                    currentUser.role !== 'Super Admin' && (
+                  {(activeView.status === "Close" ||
+                    activeView.status === "Verified") &&
+                    currentUser.role !== "Super Admin" && (
                       <p className="text-sm text-muted-foreground">
-                        Only Super Admin can mark work orders as Verified or Finished.
+                        Only Super Admin can mark work orders as Verified or
+                        Finished.
                       </p>
                     )}
                 </div>
