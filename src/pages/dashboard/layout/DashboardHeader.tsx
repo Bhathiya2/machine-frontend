@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate } from "react-router";
 import {
   BarChart2,
   Bell,
@@ -16,10 +16,10 @@ import {
   Shield,
   User,
   Users,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { useAuthContext } from '@/context'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useAuthContext } from "@/context";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,11 +27,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { cn } from '@/components/ui/utils'
-import { VIEW_LABELS, VIEW_ROUTES } from '../constants'
-import type { DashboardHeaderState } from '@/hooks/dashboard/useDashboardHeader'
-import type { AppUser, ViewName } from '../types'
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/components/ui/utils";
+import { VIEW_LABELS, VIEW_ROUTES } from "../constants";
+import type { DashboardHeaderState } from "@/hooks/dashboard/useDashboardHeader";
+import type { AppUser, ViewName } from "../types";
 
 const VIEW_ICONS: Record<ViewName, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -44,37 +44,37 @@ const VIEW_ICONS: Record<ViewName, LucideIcon> = {
   notifications: Bell,
   users: Users,
   roles: Shield,
-}
+};
 
 const VIEW_DESCRIPTIONS: Partial<Record<ViewName, string>> = {
-  dashboard: 'Fleet overview and daily maintenance summary',
-  machines: 'Registry, status, and machine details',
-  workorders: 'Assign, track, and close work orders',
-  faults: 'Fault reports — report machine problems and track them',
-  repairs: 'Historical repair logs and photos',
-  analytics: 'Cost trends and performance metrics',
-  finance: 'Work order costs and budget tracking',
-  notifications: 'Alerts and activity updates',
-  users: 'Manage team members, roles, and site access',
-  roles: 'Create roles and assign permissions to users',
-}
+  dashboard: "Fleet overview and daily maintenance summary",
+  machines: "Registry, status, and machine details",
+  workorders: "Assign, track, and close work orders",
+  faults: "Fault reports — report machine problems and track them",
+  repairs: "Historical repair logs and photos",
+  analytics: "Cost trends and performance metrics",
+  finance: "Work order costs and budget tracking",
+  notifications: "Alerts and activity updates",
+  users: "Manage team members, roles, and site access",
+  roles: "Create roles and assign permissions to users",
+};
 
 function userInitials(name: string) {
   return name
-    .split(' ')
+    .split(" ")
     .map((part) => part[0])
-    .join('')
+    .join("")
     .slice(0, 2)
-    .toUpperCase()
+    .toUpperCase();
 }
 
 interface DashboardHeaderProps {
-  view: ViewName
-  currentUser: AppUser
-  unreadCount: number
-  openFaultCount: number
-  header: DashboardHeaderState
-  onOpenNav: () => void
+  view: ViewName;
+  currentUser: AppUser;
+  unreadCount: number;
+  openFaultCount: number;
+  header: DashboardHeaderState;
+  onOpenNav: () => void;
 }
 
 export function DashboardHeader({
@@ -85,8 +85,8 @@ export function DashboardHeader({
   header,
   onOpenNav,
 }: DashboardHeaderProps) {
-  const { logout, user: authUser } = useAuthContext()
-  const navigate = useNavigate()
+  const { logout, user: authUser } = useAuthContext();
+  const navigate = useNavigate();
   const {
     isOnline,
     isAway,
@@ -99,14 +99,14 @@ export function DashboardHeader({
     selectSearchResult,
     showSearchResults,
     openSearch,
-  } = header
+  } = header;
 
-  const PageIcon = VIEW_ICONS[view]
-  const displayName = authUser?.name ?? currentUser.name
+  const PageIcon = VIEW_ICONS[view];
+  const displayName = authUser?.name ?? currentUser.name;
 
   async function handleLogout() {
-    await logout()
-    navigate('/login', { replace: true })
+    await logout();
+    navigate("/login", { replace: true });
   }
 
   return (
@@ -127,12 +127,14 @@ export function DashboardHeader({
           <nav className="mb-1 flex items-center gap-1 text-[11px] text-muted-foreground">
             <span className="hidden font-medium sm:inline">MachineTrack</span>
             <ChevronRight className="hidden size-3 sm:inline" />
-            <span className="font-medium text-foreground/80">{VIEW_LABELS[view]}</span>
+            <span className="font-medium text-foreground/80">
+              {VIEW_LABELS[view]}
+            </span>
           </nav>
 
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              {view === 'finance' ? (
+              {view === "finance" ? (
                 <span className="text-sm font-bold leading-none">৳</span>
               ) : (
                 <PageIcon className="size-4.5" strokeWidth={2.25} />
@@ -143,13 +145,17 @@ export function DashboardHeader({
                 {VIEW_LABELS[view]}
               </h1>
               <p className="hidden truncate text-xs text-muted-foreground sm:block">
-                {VIEW_DESCRIPTIONS[view] ?? `${currentUser.site} · ${currentUser.role}`}
+                {VIEW_DESCRIPTIONS[view] ??
+                  `${currentUser.site} · ${currentUser.role}`}
               </p>
             </div>
           </div>
         </div>
 
-        <div ref={searchPanelRef} className="relative hidden max-w-xs flex-1 md:block lg:max-w-sm">
+        <div
+          ref={searchPanelRef}
+          className="relative hidden max-w-xs flex-1 md:block lg:max-w-sm"
+        >
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -192,15 +198,21 @@ export function DashboardHeader({
                           {item.type}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium text-foreground">{item.label}</span>
-                          <span className="block truncate text-xs text-muted-foreground">{item.subtitle}</span>
+                          <span className="block truncate text-sm font-medium text-foreground">
+                            {item.label}
+                          </span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {item.subtitle}
+                          </span>
                         </span>
                       </button>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="px-3 py-3 text-sm text-muted-foreground">No results for “{searchQuery}”</p>
+                <p className="px-3 py-3 text-sm text-muted-foreground">
+                  No results for “{searchQuery}”
+                </p>
               )}
             </div>
           )}
@@ -209,25 +221,25 @@ export function DashboardHeader({
         <div className="flex shrink-0 items-center gap-2">
           <div
             className={cn(
-              'hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide lg:flex',
+              "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide lg:flex",
               !isOnline
-                ? 'border-border bg-muted text-muted-foreground'
+                ? "border-border bg-muted text-muted-foreground"
                 : isAway
-                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                  : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-emerald-200 bg-emerald-50 text-emerald-700",
             )}
           >
             <span
               className={cn(
-                'size-1.5 rounded-full',
+                "size-1.5 rounded-full",
                 !isOnline
-                  ? 'bg-muted-foreground'
+                  ? "bg-muted-foreground"
                   : isAway
-                    ? 'bg-amber-500'
-                    : 'animate-pulse bg-emerald-500'
+                    ? "bg-amber-500"
+                    : "animate-pulse bg-emerald-500",
               )}
             />
-            {!isOnline ? 'Offline' : isAway ? 'Away' : 'Online'}
+            {!isOnline ? "Offline" : isAway ? "Away" : "Online"}
           </div>
 
           {openFaultCount > 0 && (
@@ -238,7 +250,7 @@ export function DashboardHeader({
               onClick={() => navigate(VIEW_ROUTES.faults)}
             >
               <Flag className="size-3.5" />
-              {openFaultCount} open fault report{openFaultCount > 1 ? 's' : ''}
+              {openFaultCount} open fault report{openFaultCount > 1 ? "s" : ""}
             </Button>
           )}
 
@@ -252,7 +264,7 @@ export function DashboardHeader({
             <Bell className="size-4" />
             {unreadCount > 0 && (
               <span className="absolute -right-1 -top-1 flex size-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground ring-2 ring-card">
-                {unreadCount > 9 ? '9+' : unreadCount}
+                {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </Button>
@@ -267,15 +279,21 @@ export function DashboardHeader({
                   {userInitials(displayName)}
                 </div>
                 <div className="hidden min-w-0 text-left sm:block">
-                  <p className="max-w-[120px] truncate text-xs font-semibold leading-tight">{displayName}</p>
-                  <p className="truncate text-[10px] font-mono text-muted-foreground">{currentUser.role}</p>
+                  <p className="max-w-[120px] truncate text-xs font-semibold leading-tight">
+                    {displayName}
+                  </p>
+                  <p className="truncate text-[10px] font-mono text-muted-foreground">
+                    {currentUser.role}
+                  </p>
                 </div>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <p className="text-sm font-semibold">{displayName}</p>
-                <p className="text-xs font-normal text-muted-foreground">{authUser?.email ?? 'Signed in'}</p>
+                <p className="text-xs font-normal text-muted-foreground">
+                  {authUser?.email ?? "Signed in"}
+                </p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -303,5 +321,5 @@ export function DashboardHeader({
         </div>
       </div>
     </header>
-  )
+  );
 }
