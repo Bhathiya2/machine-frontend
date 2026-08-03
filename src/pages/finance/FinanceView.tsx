@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
-import { DollarSign, Pencil, Plus, Receipt, Search, X } from 'lucide-react'
+import { Pencil, Plus, Search, X } from 'lucide-react'
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
@@ -7,11 +7,32 @@ import { COST_CATEGORIES, COST_CATEGORY_META, MONTHS } from '@/pages/dashboard/c
 import { PERMISSIONS } from '@/pages/dashboard/permissions'
 import { usePermissions } from '@/hooks/permission/usePermissions'
 import { TablePaginationBar, useTablePagination } from '@/components/TablePagination'
-import { ChartTooltip } from '@/pages/dashboard/components/ChartTooltip'
 import { Badge, Card, FormField, inputCls, selectCls } from '@/pages/dashboard/components/DashboardUI'
-import { formatDate, fmtCurrency } from '@/pages/dashboard/utils/formatters'
+import { formatDate } from '@/pages/dashboard/utils/formatters'
 import { woStatusColor, woStatusIcon } from '@/pages/dashboard/utils/statusHelpers'
 import type { AppUser, CostCategory, CostEntry, Machine, RepairRecord, WorkOrder } from '@/pages/dashboard/types'
+
+type FinanceCurrency = 'BDT' | 'USD' | 'EUR' | 'INR'
+
+const CURRENCY_META: Record<FinanceCurrency, { symbol: string; locale: string; label: string }> = {
+  BDT: { symbol: '৳', locale: 'en-BD', label: 'BDT (৳)' },
+  USD: { symbol: '$', locale: 'en-US', label: 'USD ($)' },
+  EUR: { symbol: '€', locale: 'en-GB', label: 'EUR (€)' },
+  INR: { symbol: '₹', locale: 'en-IN', label: 'INR (₹)' },
+}
+
+const CURRENCY_OPTIONS: FinanceCurrency[] = ['BDT', 'USD', 'EUR', 'INR']
+const FINANCE_CURRENCY_STORAGE_KEY = 'finance.currency'
+
+const formatFinanceCurrency = (value: number, currency: FinanceCurrency) => {
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const meta = CURRENCY_META[currency];
+
+  return `${meta.symbol}${safeValue.toLocaleString(meta.locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+};
 
 export function FinanceView({
   repairRecords, workOrders, machines, users, currentUser, onUpdateCosts,
@@ -25,6 +46,11 @@ export function FinanceView({
   const [selectedWOId, setSelectedWOId] = useState<string | null>(workOrders[0]?.id ?? null)
   const [selectedYear, setSelectedYear] = useState(() => String(new Date().getFullYear()));
   const [selectedMonth, setSelectedMonth] = useState(() => String(new Date().getMonth() + 1).padStart(2, "0"));
+  const [currency, setCurrency] = useState<FinanceCurrency>(() => {
+    if (typeof window === 'undefined') return 'BDT'
+    const stored = window.localStorage.getItem(FINANCE_CURRENCY_STORAGE_KEY)
+    return stored && CURRENCY_OPTIONS.includes(stored as FinanceCurrency) ? (stored as FinanceCurrency) : 'BDT'
+  });
   
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<CostEntry | null>(null);
@@ -48,6 +74,14 @@ export function FinanceView({
   useEffect(() => {
     setLocalWorkOrders(workOrders)
   }, [workOrders])
+
+  useEffect(() => {
+    window.localStorage.setItem(FINANCE_CURRENCY_STORAGE_KEY, currency)
+  }, [currency])
+
+  const currencyMeta = CURRENCY_META[currency]
+  const moneyLabel = currencyMeta.label
+  const fmtCurrency = (value: number) => formatFinanceCurrency(value, currency)
 
   const woTotal = (wo: WorkOrder) => {
     const ym = `${selectedYear}-${selectedMonth}`;
@@ -179,7 +213,7 @@ export function FinanceView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
-            <Receipt size={16} className="text-primary" />
+            <span className="text-sm font-bold leading-none text-primary">৳</span>
           </div>
           <div>
             <h2 className="font-bold text-foreground text-lg leading-tight">Finance & Cost Management</h2>
@@ -187,6 +221,18 @@ export function FinanceView({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as FinanceCurrency)}
+            className="h-9 px-3 py-1.5 text-sm bg-card border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono"
+            aria-label="Currency"
+          >
+            {CURRENCY_OPTIONS.map((code) => (
+              <option key={code} value={code}>
+                {CURRENCY_META[code].label}
+              </option>
+            ))}
+          </select>
           <select 
             value={selectedYear} 
             onChange={(e) => setSelectedYear(e.target.value)}
@@ -243,8 +289,8 @@ export function FinanceView({
             <BarChart data={monthlyChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 11, fontFamily: "JetBrains Mono, monospace", fill: "#6B7280" }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={(v) => v === 0 ? "$0" : `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fontFamily: "JetBrains Mono, monospace", fill: "#6B7280" }} axisLine={false} tickLine={false} width={44} />
-              <Tooltip content={<ChartTooltip />} />
+              <YAxis tickFormatter={(v) => v === 0 ? `${currencyMeta.symbol}0` : `${currencyMeta.symbol}${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fontFamily: "JetBrains Mono, monospace", fill: "#6B7280" }} axisLine={false} tickLine={false} width={44} />
+              <Tooltip formatter={(value) => fmtCurrency(Number(value))} />
               <Legend wrapperStyle={{ fontSize: 11, fontFamily: "JetBrains Mono, monospace" }} />
               <Bar key="Transportation" dataKey="Transportation" stackId="a" fill="#F59E0B" />
               <Bar key="Accommodation"  dataKey="Accommodation"  stackId="a" fill="#8B5CF6" />
@@ -316,7 +362,7 @@ export function FinanceView({
         <div className="lg:col-span-3">
           {!selectedWO ? (
             <Card className="flex flex-col items-center justify-center h-64 text-center">
-              <Receipt size={36} className="text-muted-foreground/40 mb-3" />
+              <span className="text-4xl font-bold leading-none text-muted-foreground/40 mb-3">{currencyMeta.symbol}</span>
               <p className="text-sm text-muted-foreground">Select a work order to manage its costs</p>
             </Card>
           ) : (
@@ -370,7 +416,7 @@ export function FinanceView({
 
                 {selectedWO.costEntries.filter(e => e.date.startsWith(`${selectedYear}-${selectedMonth}`)).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <DollarSign size={28} className="text-muted-foreground/40 mb-2" />
+                    <span className="text-3xl font-bold leading-none text-muted-foreground/40 mb-2">{currencyMeta.symbol}</span>
                     <p className="text-sm text-muted-foreground">No cost entries for {MONTHS[parseInt(selectedMonth, 10) - 1]} {selectedYear}</p>
                     {canEdit && (
                       <button onClick={openAdd} className="mt-3 text-xs font-mono text-foreground hover:text-foreground transition-colors">
@@ -496,9 +542,9 @@ export function FinanceView({
                         placeholder="1" value={editForm.quantity}
                         onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })} />
                     </FormField>
-                    <FormField label="Unit Price ($)">
+                    <FormField label={`Unit Price (${moneyLabel})`}>
                       <div className="relative">
-                        <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">{currencyMeta.symbol}</span>
                         <input type="number" min="0" step="0.01" className={inputCls + " pl-8 font-mono"}
                           placeholder="0.00" value={editForm.unitPrice}
                           onChange={(e) => setEditForm({ ...editForm, unitPrice: e.target.value })} />
@@ -506,9 +552,9 @@ export function FinanceView({
                     </FormField>
                   </div>
                   <div className="grid grid-cols-2 gap-3 mt-3">
-                    <FormField label="Amount ($)">
+                    <FormField label={`Amount (${moneyLabel})`}>
                       <div className="relative">
-                        <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">{currencyMeta.symbol}</span>
                         <input type="number" min="0" step="0.01" className={inputCls + " pl-8 font-mono bg-muted/30"}
                           readOnly value={(!isNaN(parseFloat(editForm.quantity)) && !isNaN(parseFloat(editForm.unitPrice))) ? (parseFloat(editForm.quantity) * parseFloat(editForm.unitPrice)).toFixed(2) : "0.00"} />
                       </div>
@@ -579,8 +625,8 @@ export function FinanceView({
                               </td>
                               <td className="px-3 py-2 text-right font-mono font-semibold text-foreground text-xs">
                                 {(!isNaN(parseFloat(row.quantity)) && !isNaN(parseFloat(row.unitPrice))) 
-                                  ? fmtCurrency(parseFloat(row.quantity) * parseFloat(row.unitPrice)) 
-                                  : "$0.00"}
+                                  ? fmtCurrency(parseFloat(row.quantity) * parseFloat(row.unitPrice))
+                                  : `${currencyMeta.symbol}0.00`}
                               </td>
                               <td className="px-1 py-2 text-center">
                                 <button onClick={() => setPosRows(posRows.filter(r => r.id !== row.id))} className="text-muted-foreground hover:text-red-500">

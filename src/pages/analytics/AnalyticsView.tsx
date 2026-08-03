@@ -79,7 +79,7 @@ export function AnalyticsView({ repairRecords, machines }: { repairRecords: Repa
             <BarChart data={monthlyData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', fill: '#6B7280' }} axisLine={false} tickLine={false} />
-              <YAxis tickFormatter={(v) => v === 0 ? '$0' : `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', fill: '#6B7280' }} axisLine={false} tickLine={false} width={44} />
+              <YAxis tickFormatter={(v) => v === 0 ? '৳0' : `৳${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', fill: '#6B7280' }} axisLine={false} tickLine={false} width={44} />
               <Tooltip content={<ChartTooltip />} />
               <Bar key="cost" dataKey="cost" name="Repair Cost" fill="#F59E0B" radius={[3, 3, 0, 0]} />
             </BarChart>

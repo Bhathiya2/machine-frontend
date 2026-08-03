@@ -132,7 +132,11 @@ export function DashboardHeader({
 
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-              <PageIcon className="size-4.5" strokeWidth={2.25} />
+              {view === 'finance' ? (
+                <span className="text-sm font-bold leading-none">৳</span>
+              ) : (
+                <PageIcon className="size-4.5" strokeWidth={2.25} />
+              )}
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">

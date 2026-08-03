@@ -453,7 +453,7 @@ export function RepairRecordsView({
                   ))}
                 </select>
               </FormField>
-              <FormField label="Labor Cost ($)">
+              <FormField label="Labor Cost (৳)">
                 <input
                   type="number"
                   min="0"
