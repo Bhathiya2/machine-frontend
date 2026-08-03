@@ -47,6 +47,10 @@ export function apiWorkOrderToUi(api: WorkOrderApi): WorkOrder {
       ...note,
       created_at: formatDate(note.created_at),
     })) ?? [],
+    activities: api.activities?.map((activity) => ({
+      ...activity,
+      created_at: formatDate(activity.created_at),
+    })) ?? [],
     faultReportId: api.fault_report_id ?? undefined,
     costEntries: mapCostEntries(api.cost_entries),
     active_technician_id: api.active_technician_id ?? undefined,

@@ -54,6 +54,16 @@ export interface HistoryEntry {
   by: string
 }
 
+export interface WorkOrderActivity {
+  id: number
+  user_id: string
+  action: string
+  summary: string
+  changes?: Record<string, unknown> | null
+  created_at: string
+  user?: AppUser
+}
+
 export interface Machine {
   id: string
   dbId?: number
@@ -116,6 +126,7 @@ export interface WorkOrder {
   priority: 'Low' | 'Medium' | 'High'
   notes: string
   technician_notes: TechnicianNote[]
+  activities?: WorkOrderActivity[]
   faultReportId?: string
   costEntries: CostEntry[]
   active_technician_id?: string

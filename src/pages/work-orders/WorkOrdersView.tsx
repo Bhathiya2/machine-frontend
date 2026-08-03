@@ -87,6 +87,35 @@ const EMPTY_FORM: WorkOrderFormData = {
   notes: "",
 };
 
+function activityActionLabel(action: string) {
+  return action.replaceAll("_", " ").toUpperCase();
+}
+
+function activityFieldLabel(field: string) {
+  const labels: Record<string, string> = {
+    machine: "Machine",
+    title: "Title",
+    description: "Description",
+    assigned_to: "Assigned To",
+    status: "Status",
+    priority: "Priority",
+    notes: "Notes",
+    fault_report_id: "Fault Ref",
+    cost_entries: "Cost Entries",
+    checked_in_at: "Checked In",
+    checked_out_at: "Checked Out",
+  };
+
+  return labels[field] ?? field.replaceAll("_", " ");
+}
+
+function formatActivityValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+
 interface WorkOrdersViewProps {
   workOrders: WorkOrder[];
   loading: boolean;
@@ -152,6 +181,7 @@ export function WorkOrdersView({
   const [viewOrder, setViewOrder] = useState<WorkOrder | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkOrder | null>(null);
   const [technicianNotesDraft, setTechnicianNotesDraft] = useState("");
+  const [showActivityLog, setShowActivityLog] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [checkInSessions, setCheckInSessions] = useState<
     WorkOrderCheckInSession[]
@@ -203,9 +233,16 @@ export function WorkOrdersView({
     if (order) {
       setViewOrder(order);
       setTechnicianNotesDraft("");
+      setShowActivityLog(false);
       viewModal.open();
     }
   }, [focusId, workOrders]);
+
+  useEffect(() => {
+    if (!viewModal.isOpen) {
+      setShowActivityLog(false);
+    }
+  }, [viewModal.isOpen]);
 
   const sortedOrders = useMemo(() => {
     const rank = (status: WorkOrderStatus) =>
@@ -787,9 +824,21 @@ export function WorkOrdersView({
                   {activeView.machineId} · {getUserName(activeView.assignedTo)}
                 </p>
               </div>
-              <button type="button" onClick={viewModal.close}>
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full border-primary/20 bg-primary/5 px-3 text-xs font-semibold text-primary hover:bg-primary/10"
+                  onClick={() => setShowActivityLog((current) => !current)}
+                >
+                  <History size={14} />
+                  {showActivityLog ? 'Hide Activity Log' : 'Activity Log'}
+                </Button>
+                <button type="button" onClick={viewModal.close}>
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             <div className="space-y-4 p-6">
               <p className="text-sm leading-relaxed">
@@ -880,6 +929,92 @@ export function WorkOrdersView({
                 </div>
               )}
 
+              {showActivityLog && activeView.activities && activeView.activities.length > 0 && (() => {
+                const visibleActivities = activeView.activities.filter(
+                  (activity) => !['checked_in', 'checked_out'].includes(activity.action),
+                );
+
+                if (visibleActivities.length === 0) return null;
+
+                return (
+                <div className="space-y-4 rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <History size={16} />
+                      </span>
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Work Order Activity Log</h3>
+                        <p className="text-[11px] text-muted-foreground">Recent edit trail and operational events</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-primary/10 text-primary font-mono text-[11px]">
+                      {visibleActivities.length} {visibleActivities.length === 1 ? 'entry' : 'entries'}
+                    </Badge>
+                  </div>
+                  <ul className="space-y-3">
+                    {visibleActivities.map((activity) => (
+                      <li key={activity.id} className="rounded-xl border border-border/60 bg-muted/15 p-4 text-sm shadow-sm transition-colors hover:border-primary/25 hover:bg-muted/20">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground">{activity.summary}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              by <strong className="text-foreground/80">{activity.user?.name ?? activity.user_id}</strong> on {activity.created_at}
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-primary/15 bg-primary/10 px-2.5 py-1 text-[10px] font-mono font-semibold uppercase tracking-[0.18em] text-primary">
+                            {activityActionLabel(activity.action)}
+                          </span>
+                        </div>
+
+                        {activity.changes && Object.keys(activity.changes).length > 0 && (
+                          <div className="mt-3 rounded-lg border border-border/70 bg-card p-3">
+                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Changed fields</p>
+                            <div className="space-y-2">
+                              {Object.entries(activity.changes).map(([field, value]) => {
+                                if (value && typeof value === 'object' && !Array.isArray(value) && ('from' in value || 'to' in value)) {
+                                  const nextValue = value as { from?: unknown; to?: unknown };
+                                  return (
+                                    <div key={field} className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                                      <span className="text-xs font-medium text-foreground">{activityFieldLabel(field)}</span>
+                                      <span className="text-[11px] text-muted-foreground">
+                                        <span className="rounded bg-background px-1.5 py-0.5 font-mono text-foreground">{formatActivityValue(nextValue.from)}</span>
+                                        <span className="px-2 text-muted-foreground">→</span>
+                                        <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-primary">{formatActivityValue(nextValue.to)}</span>
+                                      </span>
+                                    </div>
+                                  );
+                                }
+
+                                if (field === 'cost_entries' && value && typeof value === 'object' && !Array.isArray(value)) {
+                                  const stats = value as { from_count?: unknown; to_count?: unknown; to_total?: unknown };
+                                  return (
+                                    <div key={field} className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                                      <span className="text-xs font-medium text-foreground">{activityFieldLabel(field)}</span>
+                                      <span className="text-[11px] text-muted-foreground">
+                                        {formatActivityValue(stats.from_count)} entries → {formatActivityValue(stats.to_count)} entries, total {formatActivityValue(stats.to_total)}
+                                      </span>
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div key={field} className="flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <span className="text-xs font-medium text-foreground">{activityFieldLabel(field)}</span>
+                                    <span className="text-[11px] text-muted-foreground">{formatActivityValue(value)}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                );
+              })()}
+
               {currentUser.role === "Super Admin" && checkInSessions.length > 0 && (
                 <div className="space-y-3 border-t pt-4">
                   {/* Header with Title, Session Count and Total Logged Time */}
@@ -889,7 +1024,7 @@ export function WorkOrdersView({
                       <span className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
                         Check-in Sessions Log
                       </span>
-                      <Badge variant="outline" className="font-mono text-[11px]">
+                      <Badge className="font-mono text-[11px]">
                         {checkInSessions.length} {checkInSessions.length === 1 ? 'session' : 'sessions'}
                       </Badge>
                     </div>
@@ -1194,7 +1329,7 @@ export function WorkOrdersView({
                 </div>
               )}
 
-              {isWoFinal(activeView.status) && activeView.status !== 'Close' && (
+              {isWoFinal(activeView.status) && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
                   <ShieldCheck size={15} />
                   This work order is {activeView.status.toLowerCase()}.

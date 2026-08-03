@@ -20,6 +20,16 @@ export interface TechnicianNote {
   user?: ApiUser;
 }
 
+export interface WorkOrderActivity {
+  id: number
+  user_id: string
+  action: string
+  summary: string
+  changes?: Record<string, unknown> | null
+  created_at: string
+  user?: ApiUser
+}
+
 export interface WorkOrderApi extends Timestamps {
   id: EntityId
   work_order_number: string
@@ -32,6 +42,7 @@ export interface WorkOrderApi extends Timestamps {
   priority: string
   notes: string | null
   technician_notes?: TechnicianNote[]
+  activities?: WorkOrderActivity[]
   fault_report_id: string | null
   cost_entries: ApiCostEntry[] | null
   machine?: Machine
