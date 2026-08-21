@@ -3,7 +3,7 @@ import axios from "axios";
 const TOKEN_KEY = "token";
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
