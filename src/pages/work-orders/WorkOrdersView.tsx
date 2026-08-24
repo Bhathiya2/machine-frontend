@@ -265,10 +265,7 @@ export function WorkOrdersView({
 
   const openCreate = () => {
     setFormMode("create");
-    setForm({
-      ...EMPTY_FORM,
-      machineId: machines[0]?.id ?? "",
-    });
+    setForm(EMPTY_FORM);
     formModal.open();
   };
 
@@ -405,19 +402,7 @@ export function WorkOrdersView({
   return (
     <div className="space-y-4">
       <Card className="p-4">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-6">
-          <div className="relative lg:col-span-2">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-4 text-sm"
-              placeholder="Search WO, title, machine…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <select
             className={selectCls}
             value={statusFilter}
@@ -432,7 +417,7 @@ export function WorkOrdersView({
             ))}
           </select>
           <select
-            className={selectCls}
+            className={`${selectCls} min-w-[150px]`}
             value={technicianFilter}
             onChange={(e) => setTechnicianFilter(e.target.value)}
           >
@@ -455,18 +440,24 @@ export function WorkOrdersView({
               </option>
             ))}
           </select>
-          <input
-            type="date"
-            className={inputCls}
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-          <input
-            type="date"
-            className={inputCls}
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-2 text-sm focus-within:ring-2 focus-within:ring-primary/30">
+            <span className="text-xs font-semibold text-muted-foreground shrink-0 uppercase tracking-wider">From:</span>
+            <input
+              type="date"
+              className="w-full bg-transparent text-xs text-foreground outline-none cursor-pointer"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-2 text-sm focus-within:ring-2 focus-within:ring-primary/30">
+            <span className="text-xs font-semibold text-muted-foreground shrink-0 uppercase tracking-wider">To:</span>
+            <input
+              type="date"
+              className="w-full bg-transparent text-xs text-foreground outline-none cursor-pointer"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={clearFilters}>
@@ -659,6 +650,7 @@ export function WorkOrdersView({
                     setForm({ ...form, machineId: e.target.value })
                   }
                 >
+                  <option value="">Select machine…</option>
                   {machines.map((machine) => (
                     <option key={machine.id} value={machine.id}>
                       {machine.id} — {machine.name} ({machine.site})
@@ -789,7 +781,6 @@ export function WorkOrdersView({
             </div>
             <div className="flex justify-end gap-3 border-t px-6 py-4">
               <Button variant="outline" onClick={formModal.close}>
-                <X size={15} />
                 Cancel
               </Button>
               <Button
@@ -1486,12 +1477,6 @@ export function WorkOrdersView({
                   This work order is {activeView.status.toLowerCase()}.
                 </div>
               )}
-            </div>
-            <div className="flex justify-end border-t px-6 py-4">
-              <Button variant="outline" onClick={viewModal.close}>
-                <X size={15} />
-                Close
-              </Button>
             </div>
           </div>
         </div>
