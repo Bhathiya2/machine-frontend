@@ -23,9 +23,11 @@ class RepairRecordRepository {
   }
 
   async update(dbId: number, form: RepairFormData): Promise<RepairRecord> {
-    const updated = await repairRecordService.update(
+    const updated = await repairRecordService.updateWithPhotos(
       dbId,
       formToUpdateRepairDto(form),
+      form.photoFiles,
+      form.photoType,
     );
     return apiRepairToUi(updated);
   }

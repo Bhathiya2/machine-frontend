@@ -31,6 +31,11 @@ export class BaseApi {
     return axiosInstance.put<T>(`${this.resource}/${id}`, data)
   }
 
+  updateMultipart<T>(id: EntityId, data: FormData): Promise<AxiosResponse<T>> {
+    data.append('_method', 'PUT')
+    return axiosInstance.post<T>(`${this.resource}/${id}`, data)
+  }
+
   delete(id: EntityId): Promise<AxiosResponse<void>> {
     return axiosInstance.delete(`${this.resource}/${id}`)
   }

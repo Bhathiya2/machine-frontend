@@ -1,9 +1,12 @@
-import { useDashboardContext, useFocusId } from '@/pages/dashboard/context/DashboardContext'
-import { RepairRecordsView } from './RepairRecordsView'
+import {
+  useDashboardContext,
+  useFocusId,
+} from "@/pages/dashboard/context/DashboardContext";
+import { RepairRecordsView } from "./RepairRecordsView";
 
 export default function RepairRecordsPage() {
-  const ctx = useDashboardContext()
-  const focusId = useFocusId()
+  const ctx = useDashboardContext();
+  const focusId = useFocusId();
   return (
     <RepairRecordsView
       repairRecords={ctx.repairRecords}
@@ -15,5 +18,5 @@ export default function RepairRecordsPage() {
       onCreate={ctx.createRepairRecord}
       onUpdate={ctx.updateRepairRecord}
     />
-  )
+  );
 }

@@ -55,7 +55,10 @@ export function RepairRecordsView({
   currentUser: AppUser;
   focusId?: string;
   onCreate: (form: RepairFormData) => Promise<RepairRecord | null>;
-  onUpdate: (dbId: number, form: RepairFormData) => Promise<RepairRecord | null>;
+  onUpdate: (
+    dbId: number,
+    form: RepairFormData,
+  ) => Promise<RepairRecord | null>;
 }) {
   const { can } = usePermissions();
   const canCreate = can(PERMISSIONS.REPAIRS_CREATE);
@@ -77,8 +80,8 @@ export function RepairRecordsView({
   const [partCost, setPartCost] = useState("");
   const [photoNames, setPhotoNames] = useState<string[]>([]);
   const [recordPartName, setRecordPartName] = useState("");
-  const [recordPartNumber, setRecordPartNumber] = useState("");
-  const [recordPartCost, setRecordPartCost] = useState("");
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPhotoType, setGalleryPhotoType] = useState<"before" | "after">("after");
 
   const getMachineName = (id: string) =>
     machines.find((m) => m.id === id)?.name ?? id;
@@ -166,7 +169,13 @@ export function RepairRecordsView({
   };
 
   const addPartToSelectedRecord = async () => {
-    if (!selectedRecord || !selectedRecord.dbId || !recordPartName.trim() || saving) return;
+    if (
+      !selectedRecord ||
+      !selectedRecord.dbId ||
+      !recordPartName.trim() ||
+      saving
+    )
+      return;
     setSaving(true);
     try {
       const updated = await onUpdate(selectedRecord.dbId, {
@@ -179,8 +188,8 @@ export function RepairRecordsView({
           ...selectedRecord.partsReplaced,
           {
             name: recordPartName.trim(),
-            partNumber: recordPartNumber.trim(),
-            cost: parseFloat(recordPartCost) || 0,
+            partNumber: "",
+            cost: 0,
           },
         ],
         laborCost: selectedRecord.laborCost,
@@ -191,8 +200,31 @@ export function RepairRecordsView({
       if (updated) {
         setSelectedRecord(updated);
         setRecordPartName("");
-        setRecordPartNumber("");
-        setRecordPartCost("");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const uploadGalleryPhotos = async () => {
+    if (!selectedRecord || !selectedRecord.dbId || galleryFiles.length === 0 || saving) return;
+    setSaving(true);
+    try {
+      const updated = await onUpdate(selectedRecord.dbId, {
+        workOrderId: selectedRecord.workOrderId,
+        machineId: selectedRecord.machineId,
+        date: selectedRecord.date,
+        issueCategory: selectedRecord.issueCategory,
+        issueDescription: selectedRecord.issueDescription,
+        partsReplaced: selectedRecord.partsReplaced,
+        laborCost: selectedRecord.laborCost,
+        technicianId: selectedRecord.technicianId,
+        photoFiles: galleryFiles,
+        photoType: galleryPhotoType,
+      });
+      if (updated) {
+        setSelectedRecord(updated);
+        setGalleryFiles([]);
       }
     } finally {
       setSaving(false);
@@ -474,45 +506,30 @@ export function RepairRecordsView({
                   </div>
                 )}
                 <div className="border-t border-border bg-muted/20 p-4">
-                    <p className="mb-2 text-xs font-medium text-muted-foreground">
-                      Add and save a replaced part
-                    </p>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_7rem_auto]">
-                      <input
-                        className={inputCls + " text-xs"}
-                        placeholder="Part name (required)"
-                        aria-label="New part name"
-                        value={recordPartName}
-                        onChange={(e) => setRecordPartName(e.target.value)}
-                      />
-                      <input
-                        className={inputCls + " text-xs font-mono"}
-                        placeholder="Part #"
-                        aria-label="New part number"
-                        value={recordPartNumber}
-                        onChange={(e) => setRecordPartNumber(e.target.value)}
-                      />
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className={inputCls + " text-xs font-mono"}
-                        placeholder="Cost"
-                        aria-label="New part cost"
-                        value={recordPartCost}
-                        onChange={(e) => setRecordPartCost(e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                        onClick={addPartToSelectedRecord}
-                        disabled={!canManageParts || !recordPartName.trim() || saving}
-                      >
-                        <Plus size={14} />
-                        Save Part
-                      </button>
-                    </div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    Add and save a replaced part
+                  </p>
+                    <div className="flex gap-2">
+                    <input
+                        className={inputCls + " min-w-0 flex-1 text-xs"}
+                      placeholder="Part name (required)"
+                      aria-label="New part name"
+                      value={recordPartName}
+                      onChange={(e) => setRecordPartName(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      onClick={addPartToSelectedRecord}
+                      disabled={
+                        !canManageParts || !recordPartName.trim() || saving
+                      }
+                    >
+                      <Plus size={14} />
+                      Save Part
+                    </button>
                   </div>
+                </div>
               </Card>
               <Card className="overflow-hidden">
                 <div className="px-5 py-3 border-b border-border flex items-center gap-2">
@@ -523,6 +540,41 @@ export function RepairRecordsView({
                   <span className="text-xs text-muted-foreground font-mono ml-auto">
                     {selectedRecord.photos.length} photos
                   </span>
+                </div>
+                <div className="border-b border-border bg-muted/20 p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <select
+                      className={selectCls + " sm:max-w-[10rem]"}
+                      value={galleryPhotoType}
+                      onChange={(e) => setGalleryPhotoType(e.target.value as "before" | "after")}
+                      disabled={!canManageParts}
+                      aria-label="Photo type"
+                    >
+                      <option value="before">Before / Damage</option>
+                      <option value="after">After / Repaired</option>
+                    </select>
+                    <label className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground">
+                      <ImagePlus size={15} />
+                      {galleryFiles.length > 0 ? `${galleryFiles.length} image(s) selected` : "Choose images"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        className="sr-only"
+                        disabled={!canManageParts}
+                        onChange={(e) => setGalleryFiles(Array.from(e.target.files ?? []))}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      onClick={uploadGalleryPhotos}
+                      disabled={!canManageParts || galleryFiles.length === 0 || saving}
+                    >
+                      <ImagePlus size={14} />
+                      Upload Photos
+                    </button>
+                  </div>
                 </div>
                 {selectedRecord.photos.length === 0 ? (
                   <p className="px-5 py-4 text-sm text-muted-foreground italic">
@@ -771,74 +823,74 @@ export function RepairRecordsView({
               </FormField>
               <FormField label="Parts Replaced (optional)">
                 <div className="space-y-2">
-                {form.partsReplaced.length > 0 && (
-                  <div className="space-y-1">
-                    {form.partsReplaced.map((p, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between text-sm px-3 py-2 rounded border border-border bg-muted/20"
-                      >
-                        <span>
-                          {p.name} {p.partNumber ? `(${p.partNumber})` : ""}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono">
-                            {fmtCurrency(p.cost)}
+                  {form.partsReplaced.length > 0 && (
+                    <div className="space-y-1">
+                      {form.partsReplaced.map((p, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between text-sm px-3 py-2 rounded border border-border bg-muted/20"
+                        >
+                          <span>
+                            {p.name} {p.partNumber ? `(${p.partNumber})` : ""}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setForm({
-                                ...form,
-                                partsReplaced: form.partsReplaced.filter(
-                                  (_, idx) => idx !== i,
-                                ),
-                              })
-                            }
-                            className="text-muted-foreground hover:text-red-600"
-                          >
-                            <X size={14} />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono">
+                              {fmtCurrency(p.cost)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setForm({
+                                  ...form,
+                                  partsReplaced: form.partsReplaced.filter(
+                                    (_, idx) => idx !== i,
+                                  ),
+                                })
+                              }
+                              className="text-muted-foreground hover:text-red-600"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    className={inputCls + " text-xs"}
-                    placeholder="Part name"
-                    aria-label="Part name"
-                    value={partName}
-                    onChange={(e) => setPartName(e.target.value)}
-                  />
-                  <input
-                    className={inputCls + " text-xs font-mono"}
-                    placeholder="Part #"
-                    aria-label="Part number"
-                    value={partNumber}
-                    onChange={(e) => setPartNumber(e.target.value)}
-                  />
-                  <div className="flex gap-1">
+                      ))}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-3 gap-2">
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className={inputCls + " text-xs font-mono"}
-                      placeholder="Cost"
-                      aria-label="Part cost"
-                      value={partCost}
-                      onChange={(e) => setPartCost(e.target.value)}
+                      className={inputCls + " text-xs"}
+                      placeholder="Part name"
+                      aria-label="Part name"
+                      value={partName}
+                      onChange={(e) => setPartName(e.target.value)}
                     />
-                    <button
-                      type="button"
-                      onClick={addPart}
-                      className="px-2 rounded border border-border text-muted-foreground hover:text-foreground shrink-0"
-                    >
-                      <Plus size={14} />
-                    </button>
+                    <input
+                      className={inputCls + " text-xs font-mono"}
+                      placeholder="Part #"
+                      aria-label="Part number"
+                      value={partNumber}
+                      onChange={(e) => setPartNumber(e.target.value)}
+                    />
+                    <div className="flex gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className={inputCls + " text-xs font-mono"}
+                        placeholder="Cost"
+                        aria-label="Part cost"
+                        value={partCost}
+                        onChange={(e) => setPartCost(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={addPart}
+                        className="px-2 rounded border border-border text-muted-foreground hover:text-foreground shrink-0"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
                 </div>
               </FormField>
             </div>
