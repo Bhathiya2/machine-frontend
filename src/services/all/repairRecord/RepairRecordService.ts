@@ -47,7 +47,10 @@ class RepairRecordService extends BaseService<
     payload.append("parts_replaced", JSON.stringify(data.parts_replaced ?? []));
     payload.append("photo_type", photoType);
     files.forEach((file) => payload.append("photos[]", file));
-    const response = await this.api.updateMultipart<RepairRecordApi>(id, payload);
+    const response = await this.api.updateMultipart<RepairRecordApi>(
+      id,
+      payload,
+    );
     return response.data;
   }
 }

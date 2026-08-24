@@ -81,7 +81,9 @@ export function RepairRecordsView({
   const [photoNames, setPhotoNames] = useState<string[]>([]);
   const [recordPartName, setRecordPartName] = useState("");
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [galleryPhotoType, setGalleryPhotoType] = useState<"before" | "after">("after");
+  const [galleryPhotoType, setGalleryPhotoType] = useState<"before" | "after">(
+    "after",
+  );
 
   const getMachineName = (id: string) =>
     machines.find((m) => m.id === id)?.name ?? id;
@@ -207,7 +209,13 @@ export function RepairRecordsView({
   };
 
   const uploadGalleryPhotos = async () => {
-    if (!selectedRecord || !selectedRecord.dbId || galleryFiles.length === 0 || saving) return;
+    if (
+      !selectedRecord ||
+      !selectedRecord.dbId ||
+      galleryFiles.length === 0 ||
+      saving
+    )
+      return;
     setSaving(true);
     try {
       const updated = await onUpdate(selectedRecord.dbId, {
@@ -509,9 +517,9 @@ export function RepairRecordsView({
                   <p className="mb-2 text-xs font-medium text-muted-foreground">
                     Add and save a replaced part
                   </p>
-                    <div className="flex gap-2">
+                  <div className="flex gap-2">
                     <input
-                        className={inputCls + " min-w-0 flex-1 text-xs"}
+                      className={inputCls + " min-w-0 flex-1 text-xs"}
                       placeholder="Part name (required)"
                       aria-label="New part name"
                       value={recordPartName}
@@ -546,7 +554,11 @@ export function RepairRecordsView({
                     <select
                       className={selectCls + " sm:max-w-[10rem]"}
                       value={galleryPhotoType}
-                      onChange={(e) => setGalleryPhotoType(e.target.value as "before" | "after")}
+                      onChange={(e) =>
+                        setGalleryPhotoType(
+                          e.target.value as "before" | "after",
+                        )
+                      }
                       disabled={!canManageParts}
                       aria-label="Photo type"
                     >
@@ -555,21 +567,27 @@ export function RepairRecordsView({
                     </select>
                     <label className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground">
                       <ImagePlus size={15} />
-                      {galleryFiles.length > 0 ? `${galleryFiles.length} image(s) selected` : "Choose images"}
+                      {galleryFiles.length > 0
+                        ? `${galleryFiles.length} image(s) selected`
+                        : "Choose images"}
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         multiple
                         className="sr-only"
                         disabled={!canManageParts}
-                        onChange={(e) => setGalleryFiles(Array.from(e.target.files ?? []))}
+                        onChange={(e) =>
+                          setGalleryFiles(Array.from(e.target.files ?? []))
+                        }
                       />
                     </label>
                     <button
                       type="button"
                       className="flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
                       onClick={uploadGalleryPhotos}
-                      disabled={!canManageParts || galleryFiles.length === 0 || saving}
+                      disabled={
+                        !canManageParts || galleryFiles.length === 0 || saving
+                      }
                     >
                       <ImagePlus size={14} />
                       Upload Photos
