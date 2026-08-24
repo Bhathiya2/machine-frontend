@@ -6,6 +6,22 @@ class RepairRecordService extends BaseService<RepairRecordApi, CreateRepairRecor
   constructor() {
     super(repairRecordApi)
   }
+
+  async createWithPhotos(
+    data: CreateRepairRecordDto,
+    files: File[],
+    photoType: 'before' | 'after',
+  ): Promise<RepairRecordApi> {
+    const payload = new FormData()
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && key !== 'parts_replaced') payload.append(key, String(value))
+    })
+    payload.append('parts_replaced', JSON.stringify(data.parts_replaced ?? []))
+    payload.append('photo_type', photoType)
+    files.forEach((file) => payload.append('photos[]', file))
+    const response = await this.api.create<RepairRecordApi, FormData>(payload)
+    return response.data
+  }
 }
 
 export const repairRecordService = new RepairRecordService()

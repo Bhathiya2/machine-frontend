@@ -14,7 +14,11 @@ class RepairRecordRepository {
   }
 
   async create(form: RepairFormData): Promise<RepairRecord> {
-    const created = await repairRecordService.create(formToCreateRepairDto(form))
+    const created = await repairRecordService.createWithPhotos(
+      formToCreateRepairDto(form),
+      form.photoFiles,
+      form.photoType,
+    )
     return apiRepairToUi(created)
   }
 

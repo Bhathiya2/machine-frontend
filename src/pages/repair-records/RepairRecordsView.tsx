@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Camera, Package, Plus, X } from "lucide-react";
+import { Camera, ImagePlus, Package, Plus, X } from "lucide-react";
 import { CATEGORY_COLORS, ISSUE_CATEGORIES } from "@/pages/dashboard/constants";
 import { PERMISSIONS } from "@/pages/dashboard/permissions";
 import { usePermissions } from "@/hooks/permission/usePermissions";
@@ -34,6 +34,8 @@ const EMPTY_CREATE = (): RepairFormData => ({
   partsReplaced: [],
   laborCost: 0,
   technicianId: "",
+  photoFiles: [],
+  photoType: "after",
 });
 
 export function RepairRecordsView({
@@ -67,6 +69,7 @@ export function RepairRecordsView({
   const [partName, setPartName] = useState("");
   const [partNumber, setPartNumber] = useState("");
   const [partCost, setPartCost] = useState("");
+  const [photoNames, setPhotoNames] = useState<string[]>([]);
 
   const getMachineName = (id: string) =>
     machines.find((m) => m.id === id)?.name ?? id;
@@ -99,6 +102,7 @@ export function RepairRecordsView({
     setPartName("");
     setPartNumber("");
     setPartCost("");
+    setPhotoNames([]);
     setShowCreate(true);
   };
 
@@ -641,6 +645,45 @@ export function RepairRecordsView({
                     })
                   }
                 />
+              </FormField>
+              <FormField label="Repair Photos (optional)">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <select
+                      className={selectCls + " max-w-[9rem]"}
+                      value={form.photoType}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          photoType: e.target.value as "before" | "after",
+                        })
+                      }
+                    >
+                      <option value="before">Before / Damage</option>
+                      <option value="after">After / Repaired</option>
+                    </select>
+                    <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">
+                      <ImagePlus size={15} />
+                      Choose images
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        className="sr-only"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files ?? []);
+                          setForm((prev) => ({ ...prev, photoFiles: files }));
+                          setPhotoNames(files.map((file) => file.name));
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {photoNames.length > 0 && (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {photoNames.length} image{photoNames.length === 1 ? "" : "s"} selected
+                    </p>
+                  )}
+                </div>
               </FormField>
               <div className="space-y-2">
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
