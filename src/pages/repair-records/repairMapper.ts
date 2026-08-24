@@ -1,21 +1,25 @@
-import type { CreateRepairRecordDto, RepairRecordApi, UpdateRepairRecordDto } from '@/interfaces/all/repairRecord'
-import type { IssueCategory, RepairRecord } from '@/pages/dashboard/types'
+import type {
+  CreateRepairRecordDto,
+  RepairRecordApi,
+  UpdateRepairRecordDto,
+} from "@/interfaces/all/repairRecord";
+import type { IssueCategory, RepairRecord } from "@/pages/dashboard/types";
 
 export type RepairFormData = {
-  workOrderId: string
-  machineId: string
-  date: string
-  issueCategory: IssueCategory
-  issueDescription: string
-  partsReplaced: Array<{ name: string; partNumber: string; cost: number }>
-  laborCost: number
-  technicianId: string
-  photoFiles: File[]
-  photoType: 'before' | 'after'
-}
+  workOrderId: string;
+  machineId: string;
+  date: string;
+  issueCategory: IssueCategory;
+  issueDescription: string;
+  partsReplaced: Array<{ name: string; partNumber: string; cost: number }>;
+  laborCost: number;
+  technicianId: string;
+  photoFiles: File[];
+  photoType: "before" | "after";
+};
 
 function formatDate(value: string): string {
-  return value.includes('T') ? value.split('T')[0] : value
+  return value.includes("T") ? value.split("T")[0] : value;
 }
 
 export function apiRepairToUi(api: RepairRecordApi): RepairRecord {
@@ -23,13 +27,13 @@ export function apiRepairToUi(api: RepairRecordApi): RepairRecord {
     dbId: Number(api.id),
     id: api.repair_number,
     workOrderId: api.work_order_number,
-    machineId: api.machine_number ?? '',
+    machineId: api.machine_number ?? "",
     date: formatDate(api.date),
     issueCategory: api.issue_category as IssueCategory,
     issueDescription: api.issue_description,
     partsReplaced: (api.parts_replaced ?? []).map((part) => ({
       name: part.name,
-      partNumber: part.partNumber ?? '',
+      partNumber: part.partNumber ?? "",
       cost: Number(part.cost ?? 0),
     })),
     laborCost: Number(api.labor_cost ?? 0),
@@ -38,14 +42,19 @@ export function apiRepairToUi(api: RepairRecordApi): RepairRecord {
     photos: (api.photos ?? []).map((photo) => ({
       id: photo.id,
       url: photo.url,
-      type: photo.type as 'before' | 'after',
+      type: photo.type as "before" | "after",
       caption: photo.caption,
     })),
-  }
+  };
 }
 
-export function formToCreateRepairDto(form: RepairFormData): CreateRepairRecordDto {
-  const partsCost = form.partsReplaced.reduce((sum, part) => sum + Number(part.cost || 0), 0)
+export function formToCreateRepairDto(
+  form: RepairFormData,
+): CreateRepairRecordDto {
+  const partsCost = form.partsReplaced.reduce(
+    (sum, part) => sum + Number(part.cost || 0),
+    0,
+  );
   return {
     work_order_number: form.workOrderId,
     machine_number: form.machineId,
@@ -56,9 +65,11 @@ export function formToCreateRepairDto(form: RepairFormData): CreateRepairRecordD
     labor_cost: form.laborCost,
     total_cost: partsCost + form.laborCost,
     technician_id: form.technicianId,
-  }
+  };
 }
 
-export function formToUpdateRepairDto(form: RepairFormData): UpdateRepairRecordDto {
-  return formToCreateRepairDto(form)
+export function formToUpdateRepairDto(
+  form: RepairFormData,
+): UpdateRepairRecordDto {
+  return formToCreateRepairDto(form);
 }

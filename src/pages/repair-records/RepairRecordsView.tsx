@@ -680,7 +680,8 @@ export function RepairRecordsView({
                   </div>
                   {photoNames.length > 0 && (
                     <p className="truncate text-xs text-muted-foreground">
-                      {photoNames.length} image{photoNames.length === 1 ? "" : "s"} selected
+                      {photoNames.length} image
+                      {photoNames.length === 1 ? "" : "s"} selected
                     </p>
                   )}
                 </div>
