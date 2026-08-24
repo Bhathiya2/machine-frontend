@@ -265,7 +265,10 @@ export function WorkOrdersView({
 
   const openCreate = () => {
     setFormMode("create");
-    setForm(EMPTY_FORM);
+    setForm({
+      ...EMPTY_FORM,
+      machineId: machines[0]?.id ?? "",
+    });
     formModal.open();
   };
 
@@ -656,7 +659,6 @@ export function WorkOrdersView({
                     setForm({ ...form, machineId: e.target.value })
                   }
                 >
-                  <option value="">Select machine…</option>
                   {machines.map((machine) => (
                     <option key={machine.id} value={machine.id}>
                       {machine.id} — {machine.name} ({machine.site})
@@ -787,6 +789,7 @@ export function WorkOrdersView({
             </div>
             <div className="flex justify-end gap-3 border-t px-6 py-4">
               <Button variant="outline" onClick={formModal.close}>
+                <X size={15} />
                 Cancel
               </Button>
               <Button
@@ -1483,6 +1486,12 @@ export function WorkOrdersView({
                   This work order is {activeView.status.toLowerCase()}.
                 </div>
               )}
+            </div>
+            <div className="flex justify-end border-t px-6 py-4">
+              <Button variant="outline" onClick={viewModal.close}>
+                <X size={15} />
+                Close
+              </Button>
             </div>
           </div>
         </div>

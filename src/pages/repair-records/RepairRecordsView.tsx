@@ -43,18 +43,24 @@ export function RepairRecordsView({
   machines,
   users,
   workOrders,
+  currentUser,
   focusId,
   onCreate,
+  onUpdate,
 }: {
   repairRecords: RepairRecord[];
   machines: Machine[];
   users: AppUser[];
   workOrders: WorkOrder[];
+  currentUser: AppUser;
   focusId?: string;
   onCreate: (form: RepairFormData) => Promise<RepairRecord | null>;
+  onUpdate: (dbId: number, form: RepairFormData) => Promise<RepairRecord | null>;
 }) {
   const { can } = usePermissions();
   const canCreate = can(PERMISSIONS.REPAIRS_CREATE);
+  const canUpdate = can(PERMISSIONS.REPAIRS_UPDATE);
+  const canManageParts = canUpdate || currentUser.role === "Super Admin";
   const [filterMachine, setFilterMachine] = useState<string>(focusId ?? "All");
   const [selectedRecord, setSelectedRecord] = useState<RepairRecord | null>(
     null,
@@ -70,6 +76,9 @@ export function RepairRecordsView({
   const [partNumber, setPartNumber] = useState("");
   const [partCost, setPartCost] = useState("");
   const [photoNames, setPhotoNames] = useState<string[]>([]);
+  const [recordPartName, setRecordPartName] = useState("");
+  const [recordPartNumber, setRecordPartNumber] = useState("");
+  const [recordPartCost, setRecordPartCost] = useState("");
 
   const getMachineName = (id: string) =>
     machines.find((m) => m.id === id)?.name ?? id;
@@ -151,6 +160,40 @@ export function RepairRecordsView({
       if (!created) return;
       setShowCreate(false);
       setSelectedRecord(created);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addPartToSelectedRecord = async () => {
+    if (!selectedRecord || !selectedRecord.dbId || !recordPartName.trim() || saving) return;
+    setSaving(true);
+    try {
+      const updated = await onUpdate(selectedRecord.dbId, {
+        workOrderId: selectedRecord.workOrderId,
+        machineId: selectedRecord.machineId,
+        date: selectedRecord.date,
+        issueCategory: selectedRecord.issueCategory,
+        issueDescription: selectedRecord.issueDescription,
+        partsReplaced: [
+          ...selectedRecord.partsReplaced,
+          {
+            name: recordPartName.trim(),
+            partNumber: recordPartNumber.trim(),
+            cost: parseFloat(recordPartCost) || 0,
+          },
+        ],
+        laborCost: selectedRecord.laborCost,
+        technicianId: selectedRecord.technicianId,
+        photoFiles: [],
+        photoType: "after",
+      });
+      if (updated) {
+        setSelectedRecord(updated);
+        setRecordPartName("");
+        setRecordPartNumber("");
+        setRecordPartCost("");
+      }
     } finally {
       setSaving(false);
     }
@@ -430,6 +473,46 @@ export function RepairRecordsView({
                     </div>
                   </div>
                 )}
+                <div className="border-t border-border bg-muted/20 p-4">
+                    <p className="mb-2 text-xs font-medium text-muted-foreground">
+                      Add and save a replaced part
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_7rem_auto]">
+                      <input
+                        className={inputCls + " text-xs"}
+                        placeholder="Part name (required)"
+                        aria-label="New part name"
+                        value={recordPartName}
+                        onChange={(e) => setRecordPartName(e.target.value)}
+                      />
+                      <input
+                        className={inputCls + " text-xs font-mono"}
+                        placeholder="Part #"
+                        aria-label="New part number"
+                        value={recordPartNumber}
+                        onChange={(e) => setRecordPartNumber(e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        className={inputCls + " text-xs font-mono"}
+                        placeholder="Cost"
+                        aria-label="New part cost"
+                        value={recordPartCost}
+                        onChange={(e) => setRecordPartCost(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="flex items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                        onClick={addPartToSelectedRecord}
+                        disabled={!canManageParts || !recordPartName.trim() || saving}
+                      >
+                        <Plus size={14} />
+                        Save Part
+                      </button>
+                    </div>
+                  </div>
               </Card>
               <Card className="overflow-hidden">
                 <div className="px-5 py-3 border-b border-border flex items-center gap-2">
@@ -686,10 +769,8 @@ export function RepairRecordsView({
                   )}
                 </div>
               </FormField>
-              <div className="space-y-2">
-                <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                  Parts (optional)
-                </p>
+              <FormField label="Parts Replaced (optional)">
+                <div className="space-y-2">
                 {form.partsReplaced.length > 0 && (
                   <div className="space-y-1">
                     {form.partsReplaced.map((p, i) => (
@@ -727,12 +808,14 @@ export function RepairRecordsView({
                   <input
                     className={inputCls + " text-xs"}
                     placeholder="Part name"
+                    aria-label="Part name"
                     value={partName}
                     onChange={(e) => setPartName(e.target.value)}
                   />
                   <input
                     className={inputCls + " text-xs font-mono"}
                     placeholder="Part #"
+                    aria-label="Part number"
                     value={partNumber}
                     onChange={(e) => setPartNumber(e.target.value)}
                   />
@@ -743,6 +826,7 @@ export function RepairRecordsView({
                       step="0.01"
                       className={inputCls + " text-xs font-mono"}
                       placeholder="Cost"
+                      aria-label="Part cost"
                       value={partCost}
                       onChange={(e) => setPartCost(e.target.value)}
                     />
@@ -755,7 +839,8 @@ export function RepairRecordsView({
                     </button>
                   </div>
                 </div>
-              </div>
+                </div>
+              </FormField>
             </div>
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border sticky bottom-0 bg-card">
               <button

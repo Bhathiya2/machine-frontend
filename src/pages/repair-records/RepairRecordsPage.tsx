@@ -10,8 +10,10 @@ export default function RepairRecordsPage() {
       machines={ctx.machines}
       users={ctx.users}
       workOrders={ctx.workOrders}
+      currentUser={ctx.currentUser}
       focusId={focusId}
       onCreate={ctx.createRepairRecord}
+      onUpdate={ctx.updateRepairRecord}
     />
   )
 }
