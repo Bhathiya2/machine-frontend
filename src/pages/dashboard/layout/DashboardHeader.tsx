@@ -144,7 +144,7 @@ export function DashboardHeader({
               <h1 className="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">
                 {VIEW_LABELS[view]}
               </h1>
-              <p className="hidden truncate text-xs text-muted-foreground sm:block">
+              <p className="hidden text-xs leading-relaxed text-muted-foreground sm:block">
                 {VIEW_DESCRIPTIONS[view] ??
                   `${currentUser.site} · ${currentUser.role}`}
               </p>

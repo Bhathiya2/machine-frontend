@@ -53,6 +53,22 @@ import type {
 } from '@/pages/dashboard/types'
 
 const STATUSES: MachineStatus[] = ['Operational', 'Under Maintenance', 'Broken', 'Offline']
+const JOB_TITLES = [
+  'Plant Manager',
+  'Operations Manager',
+  'Maintenance Manager',
+  'Production Manager',
+  'Engineer',
+  'Supervisor',
+  'Technician',
+  'Other',
+]
+const SMOKE_EXTRACTOR_OPTIONS = [
+  'Active / Integrated',
+  'Active / Separate',
+  'Inactive',
+  'Not Installed',
+]
 
 const EMPTY_FORM = (installedBy: string): MachineFormData => ({
   id: '',
@@ -688,7 +704,19 @@ export function MachineRegistryView({
                         <input className={inputCls} placeholder="CUST-000" value={form.client_customer_code || ''} onChange={(e) => setForm({ ...form, client_customer_code: e.target.value })} />
                       </FormField>
                       <FormField label="Job Title">
-                        <input className={inputCls} placeholder="Plant Manager" value={form.client_job_title || ''} onChange={(e) => setForm({ ...form, client_job_title: e.target.value })} />
+                        <select
+                          className={selectCls}
+                          value={form.client_job_title || ''}
+                          onChange={(e) => setForm({ ...form, client_job_title: e.target.value })}
+                        >
+                          <option value="">Select job title</option>
+                          {form.client_job_title && !JOB_TITLES.includes(form.client_job_title) && (
+                            <option value={form.client_job_title}>{form.client_job_title}</option>
+                          )}
+                          {JOB_TITLES.map((title) => (
+                            <option key={title} value={title}>{title}</option>
+                          ))}
+                        </select>
                       </FormField>
                       <FormField label="Email Address">
                         <input type="email" className={inputCls} placeholder="client@example.com" value={form.client_email || ''} onChange={(e) => setForm({ ...form, client_email: e.target.value })} />
@@ -720,7 +748,21 @@ export function MachineRegistryView({
                       <FormField label="UPS System"><input className={inputCls} placeholder="Online 10kVA" value={form.tech_ups || ''} onChange={(e) => setForm({ ...form, tech_ups: e.target.value })} /></FormField>
                       <FormField label="Chiller Cooling"><input className={inputCls} placeholder="Water Cooled" value={form.tech_chiller_cooling_system || ''} onChange={(e) => setForm({ ...form, tech_chiller_cooling_system: e.target.value })} /></FormField>
                       <FormField label="Chiller Absorbed Power"><input className={inputCls} placeholder="5.5 kW" value={form.tech_chiller_absorbed_power || ''} onChange={(e) => setForm({ ...form, tech_chiller_absorbed_power: e.target.value })} /></FormField>
-                      <FormField label="Smoke Extractor"><input className={inputCls} placeholder="Active / Integrated" value={form.tech_smoke_extractor || ''} onChange={(e) => setForm({ ...form, tech_smoke_extractor: e.target.value })} /></FormField>
+                      <FormField label="Smoke Extractor">
+                        <select
+                          className={selectCls}
+                          value={form.tech_smoke_extractor || ''}
+                          onChange={(e) => setForm({ ...form, tech_smoke_extractor: e.target.value })}
+                        >
+                          <option value="">Select smoke extractor status</option>
+                          {form.tech_smoke_extractor && !SMOKE_EXTRACTOR_OPTIONS.includes(form.tech_smoke_extractor) && (
+                            <option value={form.tech_smoke_extractor}>{form.tech_smoke_extractor}</option>
+                          )}
+                          {SMOKE_EXTRACTOR_OPTIONS.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </FormField>
                       <FormField label="Room Temp (°C)"><input className={inputCls} placeholder="22°C" value={form.tech_room_temp || ''} onChange={(e) => setForm({ ...form, tech_room_temp: e.target.value })} /></FormField>
                     </div>
                   </div>
