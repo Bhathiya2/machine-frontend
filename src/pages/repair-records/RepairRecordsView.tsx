@@ -81,9 +81,6 @@ export function RepairRecordsView({
   const [photoNames, setPhotoNames] = useState<string[]>([]);
   const [recordPartName, setRecordPartName] = useState("");
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [galleryPhotoType, setGalleryPhotoType] = useState<"before" | "after">(
-    "after",
-  );
 
   const getMachineName = (id: string) =>
     machines.find((m) => m.id === id)?.name ?? id;
@@ -228,7 +225,7 @@ export function RepairRecordsView({
         laborCost: selectedRecord.laborCost,
         technicianId: selectedRecord.technicianId,
         photoFiles: galleryFiles,
-        photoType: galleryPhotoType,
+        photoType: "after",
       });
       if (updated) {
         setSelectedRecord(updated);
@@ -551,20 +548,6 @@ export function RepairRecordsView({
                 </div>
                 <div className="border-b border-border bg-muted/20 p-4">
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <select
-                      className={selectCls + " sm:max-w-[10rem]"}
-                      value={galleryPhotoType}
-                      onChange={(e) =>
-                        setGalleryPhotoType(
-                          e.target.value as "before" | "after",
-                        )
-                      }
-                      disabled={!canManageParts}
-                      aria-label="Photo type"
-                    >
-                      <option value="before">Before / Damage</option>
-                      <option value="after">After / Repaired</option>
-                    </select>
                     <label className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground">
                       <ImagePlus size={15} />
                       {galleryFiles.length > 0
