@@ -38,6 +38,11 @@ class RepairRecordService extends BaseService<
     files: File[],
     photoType: "before" | "after",
   ): Promise<RepairRecordApi> {
+    if (files.length === 0) {
+      const response = await this.api.update<RepairRecordApi>(id, data);
+      return response.data;
+    }
+
     const payload = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && key !== "parts_replaced") {
