@@ -15,10 +15,16 @@ class RepairRecordService extends BaseService<
     super(repairRecordApi);
   }
 
-  private appendParts(payload: FormData, parts: CreateRepairRecordDto["parts_replaced"] = []) {
+  private appendParts(
+    payload: FormData,
+    parts: CreateRepairRecordDto["parts_replaced"] = [],
+  ) {
     parts.forEach((part, index) => {
       payload.append(`parts_replaced[${index}][name]`, part.name);
-      payload.append(`parts_replaced[${index}][partNumber]`, part.partNumber ?? "");
+      payload.append(
+        `parts_replaced[${index}][partNumber]`,
+        part.partNumber ?? "",
+      );
       payload.append(`parts_replaced[${index}][cost]`, String(part.cost ?? 0));
     });
   }
