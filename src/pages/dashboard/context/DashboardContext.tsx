@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useState, createContext, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+import axios from 'axios'
 import { useAuthContext } from '@/context/AuthContext'
 import type { WorkOrderFilters } from '@/interfaces/all/workOrder'
 import {
@@ -565,8 +566,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       setRepairRecords((prev) => prev.map((item) => (item.dbId === dbId ? record : item)))
       toast.success('Repair record updated')
       return record
-    } catch {
-      toast.error('Failed to update repair record')
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message ?? `Request failed (${error.response?.status ?? 'unknown'})`
+        : 'Failed to update repair record'
+      toast.error(message)
       return null
     }
   }, [])

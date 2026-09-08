@@ -22,6 +22,32 @@ function formatDate(value: string): string {
   return value.includes("T") ? value.split("T")[0] : value;
 }
 
+function normalizePhotoType(value: string | undefined): "before" | "after" {
+  return value?.toLowerCase().startsWith("before") ? "before" : "after";
+}
+
+function normalizePhotoUrl(value: string): string {
+  if (!value) return value;
+
+  const apiUrl = new URL(import.meta.env.VITE_API_BASE_URL);
+  const publicUrl = apiUrl.href.replace(/\/api\/?$/, "");
+
+  if (value.startsWith("/storage/")) {
+    return `${publicUrl}${value}`;
+  }
+
+  try {
+    const photoUrl = new URL(value);
+    if (["localhost", "127.0.0.1"].includes(photoUrl.hostname)) {
+      return `${publicUrl}${photoUrl.pathname}`;
+    }
+  } catch {
+    return `${publicUrl}/${value.replace(/^\//, "")}`;
+  }
+
+  return value;
+}
+
 export function apiRepairToUi(api: RepairRecordApi): RepairRecord {
   return {
     dbId: Number(api.id),
@@ -41,8 +67,8 @@ export function apiRepairToUi(api: RepairRecordApi): RepairRecord {
     technicianId: api.technician_id,
     photos: (api.photos ?? []).map((photo) => ({
       id: photo.id,
-      url: photo.url,
-      type: photo.type as "before" | "after",
+      url: normalizePhotoUrl(photo.url),
+      type: normalizePhotoType(photo.type),
       caption: photo.caption,
     })),
   };

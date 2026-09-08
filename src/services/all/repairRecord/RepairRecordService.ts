@@ -15,6 +15,14 @@ class RepairRecordService extends BaseService<
     super(repairRecordApi);
   }
 
+  private appendParts(payload: FormData, parts: CreateRepairRecordDto["parts_replaced"] = []) {
+    parts.forEach((part, index) => {
+      payload.append(`parts_replaced[${index}][name]`, part.name);
+      payload.append(`parts_replaced[${index}][partNumber]`, part.partNumber ?? "");
+      payload.append(`parts_replaced[${index}][cost]`, String(part.cost ?? 0));
+    });
+  }
+
   async createWithPhotos(
     data: CreateRepairRecordDto,
     files: File[],
@@ -25,7 +33,7 @@ class RepairRecordService extends BaseService<
       if (value !== undefined && key !== "parts_replaced")
         payload.append(key, String(value));
     });
-    payload.append("parts_replaced", JSON.stringify(data.parts_replaced ?? []));
+    this.appendParts(payload, data.parts_replaced);
     payload.append("photo_type", photoType);
     files.forEach((file) => payload.append("photos[]", file));
     const response = await this.api.create<RepairRecordApi, FormData>(payload);
@@ -49,7 +57,7 @@ class RepairRecordService extends BaseService<
         payload.append(key, String(value));
       }
     });
-    payload.append("parts_replaced", JSON.stringify(data.parts_replaced ?? []));
+    this.appendParts(payload, data.parts_replaced);
     payload.append("photo_type", photoType);
     files.forEach((file) => payload.append("photos[]", file));
     const response = await this.api.updateMultipart<RepairRecordApi>(
