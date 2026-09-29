@@ -16,6 +16,7 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
+  base: "/machine/",
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
@@ -32,8 +33,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target:
-          "https://demo.skytechsl.com/machine/machine-maintenance-tracker-backend/public/",
+        target: "https://demo.skytechsl.com/machine/machine-backend/public/api",
         changeOrigin: true,
       },
     },

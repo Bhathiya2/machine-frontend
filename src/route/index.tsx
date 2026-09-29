@@ -1,23 +1,23 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
-import DashboardLayout from '@/pages/dashboard/layout/DashboardLayout'
-import DashboardPage from '@/pages/home/DashboardPage'
-import MachinesPage from '@/pages/machines/MachinesPage'
-import WorkOrdersPage from '@/pages/work-orders/WorkOrdersPage'
-import FaultReportsPage from '@/pages/fault-reports/FaultReportsPage'
-import RepairRecordsPage from '@/pages/repair-records/RepairRecordsPage'
-import AnalyticsPage from '@/pages/analytics/AnalyticsPage'
-import FinancePage from '@/pages/finance/FinancePage'
-import NotificationsPage from '@/pages/notifications/NotificationsPage'
-import UsersPage from '@/pages/users/UsersPage'
-import RolesPage from '@/pages/roles/RolesPage'
-import LoginPage from '@/pages/auth/LoginPage'
-import GuestRoute from '@/route/GuestRoute'
-import ProtectedRoute from '@/route/ProtectedRoute'
-import RoleRoute from '@/route/RoleRoute'
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import DashboardLayout from "@/pages/dashboard/layout/DashboardLayout";
+import DashboardPage from "@/pages/home/DashboardPage";
+import MachinesPage from "@/pages/machines/MachinesPage";
+import WorkOrdersPage from "@/pages/work-orders/WorkOrdersPage";
+import FaultReportsPage from "@/pages/fault-reports/FaultReportsPage";
+import RepairRecordsPage from "@/pages/repair-records/RepairRecordsPage";
+import AnalyticsPage from "@/pages/analytics/AnalyticsPage";
+import FinancePage from "@/pages/finance/FinancePage";
+import NotificationsPage from "@/pages/notifications/NotificationsPage";
+import UsersPage from "@/pages/users/UsersPage";
+import RolesPage from "@/pages/roles/RolesPage";
+import LoginPage from "@/pages/auth/LoginPage";
+import GuestRoute from "@/route/GuestRoute";
+import ProtectedRoute from "@/route/ProtectedRoute";
+import RoleRoute from "@/route/RoleRoute";
 
 export default function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/machine">
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route
@@ -51,5 +51,5 @@ export default function AppRoutes() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
